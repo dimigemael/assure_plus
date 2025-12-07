@@ -1,0 +1,167 @@
+:root{
+    --DefaultFontSize:10px;
+    --SecondaryColor:#64BC26;
+    --PrimaryColor:#3E8EF5;
+    --TextColor:#14191F;
+    --StrokeGrey:#A3B1C2;
+    --SetColor:#667C99;
+    --BackgroundForm:#FFFFFF;
+    --GeneralBackground:#E0E5EB;
+}
+
+html{
+    font-size: var(--DefaultFontSize);
+}
+
+
+/* -------- CONTENEUR PRINCIPAL -------- */
+.login-container{
+    width: 100vw;
+    height: 100vh;
+    background: var(--GeneralBackground);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8rem; 
+}
+
+
+/* -------- BLOC GAUCHE -------- */
+.login-left{
+    width: 28rem;
+}
+
+.login-left h1{
+    color: var(--PrimaryColor);
+    font-size: 3.2rem;
+    margin-bottom: 1rem;
+    font-weight: 800;
+}
+
+.login-left p{
+    color: var(--TextColor);
+    font-size: 1.8rem;
+    line-height: 1.5;
+    font-weight: 500;
+}  
+
+
+/* -------- CARTE DU FORMULAIRE -------- */
+.login-box{
+    background: var(--BackgroundForm);
+    width: 35rem;
+    padding-bottom: 3rem;
+    padding-top: 2rem;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+    border-radius: 0.6rem;
+    box-shadow: 0 30px 50px 10px rgba(102, 124, 153, 0.2);
+}
+
+/* -------- INPUTS -------- */
+.login-box input{
+    width: 100%;
+    border: 0.1rem solid var(--StrokeGrey);
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    border-radius: 0.6rem;
+    color: var(--SetColor);
+    font-size:1.5rem ;
+   
+}
+
+.password-wrapper{
+  position: relative;
+  width: 100%;
+}
+
+.eye-icon{
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-70%);
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.eye-icon:hover{
+  opacity: 1;
+}
+
+
+/* -------- BOUTON BLEU -------- */
+.btn-primary{
+    width: 100%;
+    background: var(--PrimaryColor);
+    color: var(--BackgroundForm);
+    padding: 1.2rem;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+    transition:all 0.3s ease-in-out;
+    font-size: 1.8rem;
+   
+}
+
+.btn-primary:hover{
+    background: linear-gradient(135deg, 
+        var(--PrimaryColor) 0%,
+        color-mix(in srgb, var(--PrimaryColor) 80%, #0D72F2) 50%,
+        var(--PrimaryColor) 100%);   
+}
+
+/* -------- LIEN MOT DE PASSE -------- */
+.forgot{
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+}
+
+.forgot a{
+    text-decoration: none;
+    color:var(--PrimaryColor)
+}
+
+.forgot a:hover{
+    text-decoration: underline;
+}
+
+/* -------- SEPARATEUR HORIZONTAL -------- */
+.divider{
+  border: 0;
+  height: 0.1rem;
+  background: var(--StrokeGrey); 
+  opacity: 0.7;
+  margin: 1.2rem 0;
+  border-radius: 0.1rem;
+}
+
+/* -------- BOUTON VERT -------- */
+.btn-secondary{
+    width: 100%;
+    background: var(--SecondaryColor);
+    color: var(--BackgroundForm) ;
+    padding: 1.2rem;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    margin-top: 0.6rem;
+    transition: all 0.3s ease-in-out; 
+    font-size: 1.6rem;
+    font-weight: 500;
+   
+}
+.btn-secondary:hover{
+    background: linear-gradient(135deg, 
+        var(--SecondaryColor) 0%,
+        color-mix(in srgb, var(--SecondaryColor) 80%, #4D901D) 50%,
+        var(--SecondaryColor) 100%);   
+}
+
+
+

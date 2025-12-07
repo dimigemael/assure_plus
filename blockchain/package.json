@@ -1,0 +1,29 @@
+{
+  "name": "assurance-blockchain-contracts",
+  "version": "1.0.0",
+  "description": "Smart Contracts pour le système d'assurance décentralisé",
+  "main": "truffle-config.js",
+  "scripts": {
+    "compile": "truffle compile",
+    "migrate": "truffle migrate --network development",
+    "test": "truffle test",
+    "coverage": "truffle run coverage"
+  },
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "insurance",
+    "smart-contracts"
+  ],
+  "author": "TAHUE TCHOUTCHOUA GEMAEL DIMITRI",
+  "license": "MIT",
+  "dependencies": {
+    "@truffle/contract": "^4.6.31",
+    "web3": "^4.3.0"
+  },
+  "devDependencies": {
+    "truffle": "^5.11.5",
+    "solidity-coverage": "^0.8.5",
+    "@openzeppelin/contracts": "^5.0.0"
+  }
+}

@@ -1,0 +1,201 @@
+services:
+  # ========================================
+  # MySQL Database
+  # ========================================
+  mysql:
+    image: mysql:8.0
+    container_name: assurance_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-assurance_blockchain}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_USER: ${DB_USERNAME:-assurance_user}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - assurance_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================
+  # Ganache - Blockchain Locale Ethereum
+  # ========================================
+  ganache:
+    image: trufflesuite/ganache:latest
+    container_name: assurance_ganache
+    restart: unless-stopped
+    ports:
+      - "7545:8545"  # Port externe:interne
+    command:
+      - --mnemonic
+      - "myth like bonus scare over problem client lizard pioneer submit female collect"
+      - --networkId
+      - "5777"
+      - --gasPrice
+      - "20000000000"
+      - --gasLimit
+      - "6721975"
+      - --accounts
+      - "10"
+      - --defaultBalanceEther
+      - "100"
+      - --host
+      - "0.0.0.0"
+    networks:
+      - assurance_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8545 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ========================================
+  # IPFS - Stockage Décentralisé
+  # ========================================
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: assurance_ipfs
+    restart: unless-stopped
+    environment:
+      - IPFS_PROFILE=server
+    volumes:
+      - ipfs_data:/data/ipfs
+      - ipfs_staging:/export
+    ports:
+      - "5001:5001"  # API
+      - "8080:8080"  # Gateway
+    networks:
+      - assurance_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:5001/api/v0/id || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ========================================
+  # Backend Laravel API
+  # ========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: assurance_backend
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - ./backend/storage:/var/www/storage
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-assurance_blockchain}
+      - DB_USERNAME=${DB_USERNAME:-assurance_user}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - BLOCKCHAIN_RPC_URL=http://ganache:8545
+      - IPFS_HOST=ipfs
+      - IPFS_PORT=5001
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ganache:
+        condition: service_started
+      ipfs:
+        condition: service_started
+    networks:
+      - assurance_network
+    command: >
+      sh -c "
+        echo 'Attente de la disponibilité des services...' &&
+        sleep 10 &&
+        echo 'Installation des dépendances Composer...' &&
+        composer install --no-interaction --prefer-dist || echo 'Composer install failed, continuing...' &&
+        echo 'Génération des clés...' &&
+        php artisan key:generate --force || echo 'Key exists' &&
+        php artisan jwt:secret --force || echo 'JWT secret exists' &&
+        echo 'Exécution des migrations...' &&
+        php artisan migrate:fresh --seed --force || echo 'Migration failed, continuing...' &&
+        echo 'Démarrage du serveur Laravel...' &&
+        php artisan serve --host=0.0.0.0 --port=8000
+      "
+
+  # ========================================
+  # Truffle - Compilation & Déploiement des Smart Contracts
+  # ========================================
+  truffle:
+    build:
+      context: ./blockchain
+      dockerfile: Dockerfile
+    container_name: assurance_truffle
+    restart: "no"
+    working_dir: /app
+    volumes:
+      - ./blockchain:/app
+      - ./blockchain/build:/app/build
+    depends_on:
+      ganache:
+        condition: service_started
+    networks:
+      - assurance_network
+    command: >
+      sh -c "
+        echo 'Attente de Ganache...' &&
+        sleep 15 &&
+        npm install &&
+        npx truffle compile &&
+        npx truffle migrate --network development &&
+        echo 'Smart Contracts deployed successfully!' &&
+        tail -f /dev/null
+      "
+
+  # ========================================
+  # Frontend React (À créer plus tard)
+  # ========================================
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: assurance_frontend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - REACT_APP_API_URL=http://localhost:8000/api
+  #     - REACT_APP_GANACHE_URL=http://localhost:7545
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - assurance_network
+
+# ========================================
+# Volumes Persistants
+# ========================================
+volumes:
+  mysql_data:
+    driver: local
+  ipfs_data:
+    driver: local
+  ipfs_staging:
+    driver: local
+
+# ========================================
+# Réseau
+# ========================================
+networks:
+  assurance_network:
+    driver: bridge

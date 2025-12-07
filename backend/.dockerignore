@@ -1,0 +1,36 @@
+# Vendor (sera installé par Composer dans le container)
+vendor/
+node_modules/
+
+# Tests
+tests/
+phpunit.xml
+
+# Cache et logs
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+
+# Configuration locale
+.env
+.env.backup
+.env.testing
+
+# Build artifacts
+public/hot
+public/storage
+public/mix-manifest.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
