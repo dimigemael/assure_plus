@@ -78,19 +78,7 @@ export default function AdminDashboard() {
               <label>Date fin</label>
               <input id="fin" type="date" required />
 
-              <button 
-                onClick={() => {
-                  const newProduct = {
-                    type: document.getElementById("type").value,
-                    montant: document.getElementById("montant").value,
-                    prime: document.getElementById("prime").value,
-                    debut: document.getElementById("debut").value,
-                    fin: document.getElementById("fin").value,
-                  };
-                  setProducts([...products, newProduct]);
-                  alert("Produit enregistré !");
-                }}
-              >
+              <button>
                 Enregistrer
               </button>
             </div>
@@ -99,59 +87,12 @@ export default function AdminDashboard() {
 
 
        {activePage === "deploy" && (
-          <div className="card_container">
-            <div className="card deploy-card">
-              <h3>Déployer un produit d'assurance</h3>
-              <hr className="title-line" />
-
-              {products.length === 0 ? (
-                <p>Aucun produit créé pour le moment.</p>
-              ) : (
-                <>
-                  <label htmlFor="product-select" className="label">Choisir un produit :</label>
-                  <select
-                    id="product-select"
-                    className="full-width"
-                    onChange={(e) => {
-                      const idx = e.target.value;
-                      setSelectedProduct(idx === "" ? null : products[idx]);
-                    }}
-                    defaultValue=""
-                  >
-                    <option value="">-- Sélectionner --</option>
-                    {products.map((p, index) => (
-                      <option key={index} value={index}>
-                        {p.type} — {p.montant} / mois  {/* Ici on affiche le montant */}
-                      </option>
-                    ))}
-                  </select>
-
-                  {selectedProduct && (
-                    <div className="product-details">
-                      <h4 className="detail-title">Description</h4>
-                      <p><strong>Type :</strong> {selectedProduct.type}</p>
-                      <p><strong>Montant couverture :</strong> {selectedProduct.montant} FCFA</p>
-                      <p><strong>Prime mensuelle :</strong> {selectedProduct.prime} FCFA</p>
-                      <p><strong>Date début :</strong> {selectedProduct.debut}</p>
-                      <p><strong>Date fin :</strong> {selectedProduct.fin}</p>
-
-                      <div className="deploy-actions">
-                        <button
-                          className="deploy-btn"
-                          onClick={() => {
-                            alert(`Produit "${selectedProduct.type}" déployé !`);
-                          }}
-                        >
-                          Déployer
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+          <div className="card">
+              <h3>Liste des produits crees</h3>
+              <p>Ici tu affiches un tableau ou une liste.</p>
           </div>
-      )}
+            
+        )}
 
         {activePage === "list" && (
           <div className="card">
