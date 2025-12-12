@@ -68,7 +68,7 @@ html{
   padding: 1rem 0;
   cursor: pointer;
   border-bottom: 0.1rem solid rgba(255, 255, 255, 0.2);
-  font-size: 1.2rem;
+  font-size: 1.4rem;
 }
 
 .menu li:hover,
@@ -173,51 +173,4 @@ html{
 
 .card button:hover {
   background: #4D901D;
-}
-
-
-
-/* Force les boîtes à utiliser box-sizing pour éviter débordements inattendus */
-* { box-sizing: border-box; }
-/* --- PAGE DEPLOY --- */
-.card.deploy-card {
-  width: 480px;
-  background: var(--BackgroundForm);
-  padding: 2rem;
-  border-radius: 0.6rem;
-  margin-top: 2rem;
-  box-shadow: 0 30px 50px 10px rgba(102, 124, 153, 0.2);
-}
-
-/* Style du select */
-.full-width {
-  width: 100%;
-  padding: 1rem;
-  margin: 0.5rem 0 1.5rem 0;
-  border: 1px solid var(--StrokeGrey);
-  border-radius: 0.6rem;
-  font-size: 1.4rem;
-  background: white;
-}
-
-/* Conteneur pour centrer la carte */
-.card_container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 2rem;
-}
-
-/* Détails du produit */
-.product-details {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 0.6rem;
-  border: 1px solid #e9ecef;
-}
-
-.product-details p {
-  margin: 0.5rem 0;
-  font-size: 1.4rem;
 }
