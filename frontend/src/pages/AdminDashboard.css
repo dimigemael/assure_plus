@@ -141,6 +141,15 @@ html{
   
 }
 
+
+.title-line2 {
+  border: none;
+  height: 1px;
+  background-color: var(--StrokeGrey);
+  margin: 0 -2rem 1.5rem -2rem;
+  
+}
+
 .card input {
   width: 100%;
   padding: 1.2rem 1.5rem;

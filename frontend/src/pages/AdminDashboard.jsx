@@ -1,11 +1,9 @@
 import { useState } from "react";
 import "./AdminDashboard.css"; 
-import "./Login.jsx"
 import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {
   const [activePage, setActivePage] = useState("create");
-  const [products, setProducts] = useState([]);
   return (
     <div className="dashboard-container">
 

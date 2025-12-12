@@ -1,0 +1,275 @@
+:root{
+    --DefaultFontSize:10px;
+    --SecondaryColor:#64BC26;
+    --PrimaryColor_accueil:#3E8EF5;
+    --TextColor:#14191F;
+    --StrokeGrey:#A3B1C2;
+    --BackgroundForm:#FFFFFF;
+    --GeneralBackground:#E0E5EB;
+    --DashboardtextColor_sidebar:#084491;
+}
+
+html{
+    font-size: var(--DefaultFontSize);
+}
+
+/* --- CONTAINER --- */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--GeneralBackground);
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+  width: 26rem;
+  background: var(--DashboardtextColor_sidebar);
+  color: var(--BackgroundForm);
+  padding: 2rem 1.5rem;
+}
+
+/* --- PROFILE --- */
+.profile {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.avatar {
+  width: 7rem;
+  height: 7rem;
+  margin: 0 auto;
+  background: var(--BackgroundForm);
+  border-radius: 50%;
+  font-size: 3.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border:0.3rem solid #052D61;
+}
+
+.profile h3 {
+  margin: 1rem 0 0.3rem 0;
+  font-size: 1.4rem;
+}
+
+.profile p {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+/* --- MENU --- */
+.menu {
+  list-style: none;
+  padding: 0;
+}
+
+.menu li {
+  padding: 1rem 0;
+  cursor: pointer;
+  border-bottom: 0.1rem solid rgba(255, 255, 255, 0.2);
+  font-size: 1.4rem;
+}
+
+.menu li:hover,
+.menu li.active {
+  color: var(--PrimaryColor_accueil);
+}
+
+/* --- MAIN --- */
+.main {
+  flex: 1;
+  padding: 2rem 3rem;
+}
+
+/* --- HEADER --- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--DashboardtextColor_sidebar);
+  font-size: 1.8rem;
+}
+
+.link-home {
+  color: var(--PrimaryColor_accueil);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
+.link-home:hover{
+  border-bottom: 0.5rem solid var(--PrimaryColor_accueil);
+  color:#0D72F2;
+}
+
+/* --- CARD CONTAINER --- */
+.card_container{
+  display: flex;
+  flex-wrap: wrap;       /* permet plusieurs cartes sur une ligne */
+  gap: 5rem;         
+  justify-content: center;
+}
+
+/* --- CARD --- */
+.card {
+  width: 30rem;           
+  background: var(--BackgroundForm);
+  padding: 1.5rem;        
+  border-radius: 0.6rem;
+  box-shadow: 0 30px 50px 10px rgba(102, 124, 153, 0.2);
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem; 
+}
+
+/* --- CARD TITLE --- */
+.card h3 {
+  text-align: center;
+  margin-bottom: 0.8rem;
+  font-size: 1.8rem;      
+  color: var(--TextColor);
+}
+
+/* --- TITLE LINE --- */
+.title-line {
+  border: none;
+  height: 1px;
+  background-color: var(--StrokeGrey);
+  margin: 0 -1.5rem 1.5rem -1.5rem;
+}
+
+/* --- CARD DETAILS --- */
+.card p {
+  font-size: 1.4rem;      
+  line-height: 1.4;       
+  margin-bottom: 0.6rem;
+  color: var(--TextColor);
+}
+
+/* --- BUTTONS --- */
+.card button {
+  width: 100%;
+  padding: 1.2rem;        
+  background: var(--SecondaryColor);
+  color: var(--BackgroundForm);
+  border: none;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  font-size: 1.6rem;    
+  font-weight: 500;
+  margin-top: 1rem;
+}
+
+.card button:hover {
+  background: #4D901D;
+}
+
+/* --- SINISTRE FORMULAIRE (Styles Spécifiques) --- */
+
+.card.sinister-card {
+  width: 36rem; 
+  padding: 2rem 2rem 2.5rem 2rem;
+  
+}
+
+.sinister-title {
+  font-size: 2.2rem;
+  color: var(--TextColor);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Styles des champs Description (textarea) et Montant (input) */
+
+.sinister-card input[type="number"]{
+    margin-bottom: 0;
+}
+.sinister-card input[type="number"],
+.sinister-card textarea {
+  width: 100%;
+  padding: 1.2rem 1.5rem; 
+  border: 1px solid var(--StrokeGrey);
+  border-radius: 0.6rem;
+  color: var(--TextColor);
+  font-size: 1.6rem;
+  resize: none; 
+}
+
+
+.sinister-card textarea::placeholder,
+.sinister-card input::placeholder {
+    color: var(--StrokeGrey);
+    font-size: 1.6rem;
+}
+
+/* Zone de Téléversement */
+.proofs-label {
+    font-size: 1.6rem;
+    color: var(--TextColor);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.file-upload-zone {
+  width: 100%;
+  height: 15rem; 
+  border: 2px dashed var(--StrokeGrey);
+  border-radius: 0.8rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+  cursor: pointer;
+  background: var(--BackgroundForm);
+  position: relative;
+}
+
+/* Style si un fichier est sélectionné */
+.file-upload-zone .file-name {
+    font-size: 1.6rem;
+    color: var(--PrimaryColor_accueil);
+    margin: 0;
+}
+
+/* Positionnement des icônes de nuages */
+.cloud-icon-container {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.cloud-icon-container img{
+    height:5rem ;
+    width:5rem ;
+}
+
+.cloud-icon-line{
+    display: flex;
+    gap:2rem;
+}
+
+/* Style du bouton Envoyer */
+.sinister-submit-btn {
+  width: 100%;
+  padding: 1.4rem 1.5rem;
+  background: var(--SecondaryColor); 
+  color: var(--BackgroundForm); 
+  border: none;
+  border-radius: 0.8rem;
+  cursor: pointer;
+  font-size: 1.8rem;
+  font-weight: 500; 
+}
+
+.sinister-submit-btn:hover {
+  background: #4D901D; 
+}
