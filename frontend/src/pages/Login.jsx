@@ -45,7 +45,7 @@ function Login() {
 
         </div>
 
-        <button className="btn-primary" onClick={() => navigate("/assure_dashboard")}>Se connecter</button>
+        <button className="btn-primary" onClick={() => navigate("/expert_dashboard")}>Se connecter</button>
 
         <p className="forgot"><a href="#">Mot de passe oublié ?</a></p>
 

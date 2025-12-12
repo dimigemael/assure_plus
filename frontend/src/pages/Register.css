@@ -237,7 +237,7 @@ html{
 }
 
 .error-text {
-  color: red;
+  color: #FE2712;
   font-size: 1.3rem;
   margin-bottom: 1rem;
   text-align: center;

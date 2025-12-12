@@ -1,0 +1,208 @@
+/* --- COULEURS ET VARIABLES --- */
+:root {
+    --SecondaryColor: #64BC26;
+    --PrimaryColor_accueil: #3E8EF5;
+    --TextColor: #14191F;
+    --StrokeGrey: #A3B1C2;
+    --BackgroundForm: #FFFFFF;
+    --GeneralBackground: #E0E5EB;
+    --DashboardtextColor_sidebar: #084491;
+    --RedColor:#FE2712;
+    --OrangeColor:#FD9900;
+    --GreenColor:#64BC26;
+}
+
+html {
+    font-size: 10px;
+}
+
+/* --- CONTAINER PRINCIPAL --- */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background: var(--GeneralBackground);
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 26rem;
+    background: var(--DashboardtextColor_sidebar);
+    color: var(--BackgroundForm);
+    padding: 2rem 1.5rem;
+}
+
+.profile {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.avatar {
+    width: 7rem;
+    height: 7rem;
+    margin: 0 auto;
+    background: var(--BackgroundForm);
+    border-radius: 50%;
+    font-size: 3.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 0.3rem solid #052D61;
+}
+
+.profile h3 {
+    margin: 1rem 0 0.3rem 0;
+    font-size: 1.4rem;
+}
+
+.profile p {
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+.sidebar-title {
+    font-size: 1.6rem;
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
+    font-weight: bold;
+    color: var(--BackgroundForm);
+}
+
+.sinister-status-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2.5rem;
+}
+
+.sinister-status-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+    color: var(--BackgroundForm);
+    cursor: pointer;
+}
+
+.sinister-status-list li:hover,
+.sinister-status-list li.active {
+    color: var(--PrimaryColor_accueil);
+}
+
+.bullet {
+    display: inline-block;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    margin-right: 1rem;
+    border: 0.6px solid var(--StrokeGrey);
+}
+
+.bullet-orange {
+    background-color: var(--OrangeColor);
+}
+
+.bullet-red {
+    background-color: var(--RedColor)
+}
+
+.bullet-green {
+    background-color: var(--GreenColor);
+}
+
+/* --- MAIN CONTENT --- */
+.main {
+    flex: 1;
+    padding: 2rem 3rem;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h2 {
+    margin: 0;
+    color: var(--DashboardtextColor_sidebar);
+    font-size: 1.8rem;
+}
+
+/* --- CARD CONTAINER --- */
+.card_container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 cartes par ligne */
+    gap: 2rem; /* espace entre les cartes */
+    justify-items: center;
+    margin-top: 2rem;
+}
+/* --- CARDS SINISTRES --- */
+.card {
+    width: 32rem;
+    background: var(--BackgroundForm);
+    padding: 2rem;
+    border-radius: 0.6rem;
+    box-shadow: 0 30px 50px 10px rgba(102, 124, 153, 0.2);
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.5rem;
+}
+
+.card h3 {
+    text-align: center;
+    margin-bottom: 0.8rem;
+    font-size: 1.8rem;
+    color: var(--TextColor);
+}
+
+.title-line {
+    border: none;
+    height: 1px;
+    background-color: var(--StrokeGrey);
+    margin: 0 -2rem 1.5rem -2rem;
+}
+
+.card p {
+    font-size: 1.4rem;
+    line-height: 1.4;
+    margin-bottom: 0.6rem;
+    color: var(--TextColor);
+}
+
+/* --- BOUTONS --- */
+.card button {
+    flex: 1;
+    padding: 1.2rem;
+    background: var(--SecondaryColor);
+    color: var(--BackgroundForm);
+    border: none;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    font-size: 1.6rem;
+    font-weight: 500;
+}
+
+.card button:hover {
+    background: #4D901D;
+}
+
+/* --- BOUTONS ALIGNÉS HORIZONTALEMENT --- */
+.card .button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.proofs-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem; /* espace entre les fichiers */
+    margin-top: 0.5rem;
+}
+
+.proof-item {
+    background-color: #f0f0f0;
+    color: #333;
+    padding: 0.5rem 1rem;
+    border-radius: 0.6rem;
+    font-size: 1.4rem;
+    border: 1px solid #ccc;
+}
