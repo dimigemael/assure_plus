@@ -69,15 +69,15 @@ const Register = () => {
         <form className="register-form" onSubmit={handleSubmit}>
 
           <div className="form-group">
-            <input type="text" name="nom" value={formData.nom} onChange={handleChange} placeholder="Nom" />
+            <input type="text" name="nom" value={formData.nom} onChange={handleChange} placeholder="Nom" required/>
           </div>
 
           <div className="form-group">
-            <input type="text" name="prenom" value={formData.prenom} onChange={handleChange} placeholder="Prenom" />
+            <input type="text" name="prenom" value={formData.prenom} onChange={handleChange} placeholder="Prenom" required />
           </div>
 
           <div className="form-group">
-            <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Adresse e-mail" />
+            <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Adresse e-mail" required />
           </div>
 
           {/* MOT DE PASSE */}
@@ -88,6 +88,7 @@ const Register = () => {
               value={formData.motDePasse}
               onChange={handleChange}
               placeholder="Nouveau mot de passe"
+              required
             />
 
             {formData.motDePasse !== "" && (
@@ -108,6 +109,7 @@ const Register = () => {
               value={formData.confirmMotDePasse}
               onChange={handleChange}
               placeholder="Confirmer le mot de passe"
+              required
             />
 
             {formData.confirmMotDePasse !== "" && (
@@ -142,13 +144,13 @@ const Register = () => {
 
           {formData.role === 'Assuré' && (
             <div className="form-group">
-              <input type="text" name="walletAddress" value={formData.walletAddress} onChange={handleChange} placeholder="Wallet Address" />
+              <input type="text" name="walletAddress" value={formData.walletAddress} onChange={handleChange} placeholder="Wallet Address" required />
             </div>
           )}
 
           {formData.role === 'Expert' && (
             <div className="form-group">
-              <input type="text" name="specialite" value={formData.specialite} onChange={handleChange} placeholder="Spécialité" />
+              <input type="text" name="specialite" value={formData.specialite} onChange={handleChange} placeholder="Spécialité" required />
             </div>
           )}
 

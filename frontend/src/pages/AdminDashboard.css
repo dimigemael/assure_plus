@@ -1,0 +1,223 @@
+:root{
+    --DefaultFontSize:10px;
+    --SecondaryColor:#64BC26;
+    --PrimaryColor_accueil:#3E8EF5;
+    --TextColor:#14191F;
+    --StrokeGrey:#A3B1C2;
+    --SetColor:#667C99;
+    --BackgroundForm:#FFFFFF;
+    --GeneralBackground:#E0E5EB;
+    --DashboardtextColor_sidebar:#084491;
+}
+
+html{
+    font-size: var(--DefaultFontSize);
+}
+
+/* --- CONTAINER --- */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--GeneralBackground);
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+  width: 26rem;
+  background: var(--DashboardtextColor_sidebar);
+  color: var(--BackgroundForm);
+  padding: 2rem 1.5rem;
+}
+
+/* --- PROFILE --- */
+.profile {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.avatar {
+  width: 7rem;
+  height: 7rem;
+  margin: 0 auto;
+  background: var(--BackgroundForm);
+  border-radius: 50%;
+  font-size: 3.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border:0.3rem solid #052D61;
+}
+
+.profile h3 {
+  margin: 1rem 0 0.3rem 0;
+  font-size: 1.4rem;
+}
+
+.profile p {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+/* --- MENU --- */
+.menu {
+  list-style: none;
+  padding: 0;
+}
+
+.menu li {
+  padding: 1rem 0;
+  cursor: pointer;
+  border-bottom: 0.1rem solid rgba(255, 255, 255, 0.2);
+  font-size: 1.2rem;
+}
+
+.menu li:hover,
+.menu li.active {
+  color: var(--PrimaryColor_accueil);
+}
+
+/* --- MAIN --- */
+.main {
+  flex: 1;
+  padding: 2rem 3rem;
+}
+
+/* --- HEADER --- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--DashboardtextColor_sidebar);
+  font-size: 1.8rem;
+}
+
+.link-home {
+  color: var(--PrimaryColor_accueil);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
+.link-home:hover{
+  border-bottom: 0.5rem solid var(--PrimaryColor_accueil);
+  color:#0D72F2;
+}
+
+/* --- CARD --- */
+.card_container{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  width: 36rem;
+  background: var(--BackgroundForm);
+  padding-left: 2rem;
+  padding-right: 2rem;
+  padding-bottom: 2.5rem;
+  padding-top: 2rem;
+  border-radius: 0.6rem;
+  margin-top: 2rem;
+  box-shadow: 0 30px 50px 10px rgba(102, 124, 153, 0.2);  
+}
+
+.card h3 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  color: var(--TextColor);
+}
+
+.title-line {
+  border: none;
+  height: 1px;
+  background-color: var(--StrokeGrey);
+  margin: 0 -2rem 1.5rem -2rem;
+  
+}
+
+.card input {
+  width: 100%;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 0.1rem solid var(--StrokeGrey);
+  border-radius: 0.6rem;
+  color: var(--SetColor);
+  font-size: 1.4rem;
+}
+
+.card label {
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+  display: block;
+  color: var(--TextColor);
+}
+
+.card button {
+  width: 100%;
+  padding: 1.2rem 1.5rem;
+  background: var(--SecondaryColor);
+  color:var(--BackgroundForm);
+  border: none;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  font-size: 1.8rem;
+  font-weight: 500;
+  margin-top: 1rem;
+}
+
+.card button:hover {
+  background: #4D901D;
+}
+
+
+
+/* Force les boîtes à utiliser box-sizing pour éviter débordements inattendus */
+* { box-sizing: border-box; }
+/* --- PAGE DEPLOY --- */
+.card.deploy-card {
+  width: 480px;
+  background: var(--BackgroundForm);
+  padding: 2rem;
+  border-radius: 0.6rem;
+  margin-top: 2rem;
+  box-shadow: 0 30px 50px 10px rgba(102, 124, 153, 0.2);
+}
+
+/* Style du select */
+.full-width {
+  width: 100%;
+  padding: 1rem;
+  margin: 0.5rem 0 1.5rem 0;
+  border: 1px solid var(--StrokeGrey);
+  border-radius: 0.6rem;
+  font-size: 1.4rem;
+  background: white;
+}
+
+/* Conteneur pour centrer la carte */
+.card_container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+}
+
+/* Détails du produit */
+.product-details {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 0.6rem;
+  border: 1px solid #e9ecef;
+}
+
+.product-details p {
+  margin: 0.5rem 0;
+  font-size: 1.4rem;
+}
