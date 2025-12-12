@@ -184,13 +184,14 @@ html{
 }
 
 .input-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2.5rem;
 }
 
 /* Styles des champs Description (textarea) et Montant (input) */
 
 .sinister-card input[type="number"]{
-    margin-bottom: 0;
+    margin-bottom: 1rem;
+    margin-top: 1.4rem;
 }
 .sinister-card input[type="number"],
 .sinister-card textarea {

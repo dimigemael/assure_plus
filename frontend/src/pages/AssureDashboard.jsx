@@ -1,10 +1,12 @@
 import { useState } from "react";
 import "./AssureDashboard.css"; 
 import { Link } from 'react-router-dom';
-import cloud from "../assets/cloud.svg";
 
 export default function AssureDashboard() {
   const [activePage, setActivePage] = useState("suscribe");
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+
 
   // Simuler des produits disponibles
   const [products] = useState([
@@ -126,88 +128,101 @@ export default function AssureDashboard() {
         {/* --- DÉCLARER UN SINISTRE --- */}
         {activePage === "declare" && (
           <div className="card_container">
-            <div className="card sinister-card">
-              <h3 className="sinister-title">Déclarer un sinistre</h3>
-               <hr className="title-line2" />
 
-              
-              <form onSubmit={handleSinisterSubmit}>
-                
-                {/* Champ Description (Textearea pour une meilleure apparence) */}
-                <div className="input-group">
+            {/* === ÉTAPE 1 : AFFICHER LISTE DES PRODUITS === */}
+            {!showForm && (
+              <>
+                {products.map((product, index) => (
+                  <div key={index} className="card">
+                    <h3>{product.type}</h3>
+                    <hr className="title-line" />
+
+                    <p><strong>Montant couverture :</strong> {product.montant.toLocaleString()} FCFA</p>
+                    <p><strong>Prime mensuelle :</strong> {product.prime.toLocaleString()} FCFA</p>
+                    <p><strong>Date début :</strong> {product.debut}</p>
+                    <p><strong>Date fin :</strong> {product.fin}</p>
+
+                    <button
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setShowForm(true);   //  ON AFFICHE MAINTENANT L’AUTRE INTERFACE
+                      }}
+                    >
+                      Déclarer un sinistre<br/> pour ce produit
+                    </button>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* === ÉTAPE 2 : AFFICHER LE FORMULAIRE === */}
+            {showForm && selectedProduct && (
+              <div className="card sinister-card">
+
+                <h3 className="sinister-title">
+                  Déclaration de sinistre
+                </h3>
+                <hr className="title-line2" />
+
+                <form onSubmit={handleSinisterSubmit}>
+
                   <textarea 
                     name="description" 
-                    placeholder="Description" 
+                    placeholder="Description"
                     rows="3"
                     value={sinisterDetails.description}
                     onChange={handleSinisterChange}
-                    required 
+                    required
                   />
-                </div>
 
-                {/* Champ Montant réclamé */}
-                <div className="input-group">
                   <input 
-                    name="claimedAmount" 
-                    type="number" 
-                    placeholder="Montant réclamé" 
+                    name="claimedAmount"
+                    type="number"
+                    placeholder="Montant réclamé"
                     value={sinisterDetails.claimedAmount}
                     onChange={handleSinisterChange}
-                    required 
+                    required
                   />
-                </div>
-                
-                {/* Zone de Téléversement de Preuves */}
-                <label className="proofs-label">Téléverser des preuves</label>
-                <div 
-                  className="file-upload-zone"
-                  onClick={() => document.getElementById('proofs-input').click()} 
-                >
-                  <input 
-                    name="proofs"
-                    type="file" 
-                    id="proofs-input" 
-                    onChange={handleSinisterChange}
-                    style={{ display: 'none' }} 
-                    multiple 
-                  />
-                  
-                  {/* Affichage visuel des nuages ou du nom du fichier sélectionné */}
-                  {sinisterDetails.proofs ? (
+
+                  <label className="proofs-label">Téléverser des preuves</label>
+                  <div 
+                    className="file-upload-zone"
+                    onClick={() => document.getElementById('proofs-input').click()} 
+                  >
+                    <input 
+                      name="proofs"
+                      type="file"
+                      id="proofs-input"
+                      onChange={handleSinisterChange}
+                      style={{ display: 'none' }}
+                    />
+
+                    {sinisterDetails.proofs ? (
                       <p className="file-name">{sinisterDetails.proofs.name}</p>
-                  ) : (
-                      <div className="cloud-icon-container">
-                        <img 
-                            src={cloud}
-                            alt="Nuage icône 1" 
-                            className="cloud-image primary-cloud" 
-                        />
-                        <div className="cloud-icon-line">
-                            <img 
-                                src={cloud}
-                                alt="Nuage icône 1" 
-                                className="cloud-image primary-cloud" 
-                            />
+                    ) : (
+                      <p>Cliquez pour importer un fichier</p>
+                    )}
+                  </div>
 
-                            <img 
-                                src={cloud} 
-                                alt="Nuage icône 1" 
-                                className="cloud-image primary-cloud" 
-                            />
-                        </div>
+                  <button type="submit" className="sinister-submit-btn">Envoyer</button>
+                </form>
 
-                      </div>
-                  )}
-                </div>
-
-                {/* Bouton Envoyer */}
-                <button type="submit" className="sinister-submit-btn">
-                  Envoyer
+                {/*Bouton retour */}
+                <button
+                  className="go-back-btn"
+                  onClick={() => {
+                    setShowForm(false);
+                    setSelectedProduct(null);
+                  }}
+                >
+                  ← Retour aux produits
                 </button>
-              </form>
-            </div>
+              </div>
+            )}
+
           </div>
         )}
+
 
         {activePage === "list" && (
           <div className="card">
