@@ -16,22 +16,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // ⭐ Étape A : Crée un compte ADMIN pour les tests d'approbation (Étape 6)
-        User::create([
-            'nom' => 'Master',
-            'prenom' => 'Admin',
-            'email' => 'admin@test.com',        // Utilisateur pour l'étape de 'PATCH'
-            'password' => Hash::make('password'), 
-            'role' => 'admin',                 // Le rôle qui a les permissions !
-            'email_verified_at' => now(),
-        ]);
-        
+        // ⭐ Crée l'administrateur principal (seeder dédié)
+        $this->call(AdminSeeder::class);
+
         // ⭐ Étape B : Crée l'utilisateur assuré/client qui a créé le sinistre (ID: 2)
         User::create([
             'nom' => 'Client',
             'prenom' => 'Test',
             'email' => 'client@test.com',       // Utilisateur qui a créé le Sinistre ID: 1
-            'password' => Hash::make('password'), 
+            'password' => Hash::make('password'),
             'role' => 'assure',
             'email_verified_at' => now(),
         ]);

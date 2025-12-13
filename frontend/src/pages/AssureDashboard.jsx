@@ -1,11 +1,19 @@
 import { useState } from "react";
-import "./AssureDashboard.css"; 
-import { Link } from 'react-router-dom';
+import "./AssureDashboard.css";
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function AssureDashboard() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [activePage, setActivePage] = useState("suscribe");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showForm, setShowForm] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
 
   // Simuler des produits disponibles
@@ -67,8 +75,8 @@ export default function AssureDashboard() {
 
         <div className="profile">
           <div className="avatar">👤</div>
-          <h3>FOLLA BELL</h3>
-          <p>follabell@gmail.com</p>
+          <h3>{user?.nom} {user?.prenom}</h3>
+          <p>{user?.email}</p>
         </div>
 
         <ul className="menu">
@@ -86,11 +94,18 @@ export default function AssureDashboard() {
             Déclarer un sinistre
           </li>
 
-          <li 
+          <li
             className={activePage === "list" ? "active" : ""}
             onClick={() => setActivePage("list")}
           >
            Historique des  contrats et transactions
+          </li>
+
+          <li
+            onClick={handleLogout}
+            style={{ marginTop: 'auto', color: '#ff4444', cursor: 'pointer' }}
+          >
+            🚪 Déconnexion
           </li>
         </ul>
       </div>

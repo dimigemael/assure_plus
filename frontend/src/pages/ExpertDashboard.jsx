@@ -1,10 +1,18 @@
 import { useState } from "react";
 import "./ExpertDashboard.css";
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function ExpertDashboard() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   // Par défaut, "en-attente" est actif
   const [activePage, setActivePage] = useState("en-attente");
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   // Exemple de sinistres déclarés
   const [sinistres, setSinistres] = useState([
@@ -46,8 +54,9 @@ export default function ExpertDashboard() {
       <div className="sidebar">
         <div className="profile">
           <div className="avatar">👤</div>
-          <h3>FOLLA BELL</h3>
-          <p>follabell@gmail.com</p>
+          <h3>{user?.nom} {user?.prenom}</h3>
+          <p>{user?.email}</p>
+          <span style={{ fontSize: '12px', color: '#666' }}>Expert - {user?.specialite}</span>
         </div>
 
         <h3 className="sidebar-title">Liste des sinistres</h3>
@@ -69,6 +78,13 @@ export default function ExpertDashboard() {
             onClick={() => setActivePage("valide")}
           >
             <span className="bullet bullet-green"></span> Validé / indemnisé
+          </li>
+
+          <li
+            onClick={handleLogout}
+            style={{ marginTop: 'auto', color: '#ff4444', cursor: 'pointer', paddingTop: '20px' }}
+          >
+            🚪 Déconnexion
           </li>
         </ul>
       </div>

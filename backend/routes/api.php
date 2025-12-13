@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\Api\ContractController as ApiContractController;
+use App\Http\Controllers\Api\InsuranceProductController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\BlockchainTestController;
 
@@ -22,8 +24,28 @@ Route::controller(AuthController::class)->group(function () {
         Route::post('refresh', 'refresh');
 
         // --- ROUTES CONTRATS ---
-        Route::get('contracts', [ContractController::class, 'index']); // Voir mes contrats
-        Route::post('contracts', [ContractController::class, 'store']); // Créer un contrat
+        // Liste et création de contrats
+        Route::get('contracts', [ApiContractController::class, 'index']); // Liste tous les contrats (avec filtres)
+        Route::post('contracts', [ApiContractController::class, 'store']); // Créer un nouveau contrat
+        Route::get('contracts/{id}', [ApiContractController::class, 'show']); // Détails d'un contrat
+        Route::put('contracts/{id}', [ApiContractController::class, 'update']); // Modifier un contrat
+        Route::delete('contracts/{id}', [ApiContractController::class, 'destroy']); // Supprimer un contrat (brouillon seulement)
+
+        // Actions spéciales sur les contrats
+        Route::post('contracts/{id}/activate', [ApiContractController::class, 'activate']); // Activer (déployer sur blockchain)
+        Route::post('contracts/{id}/cancel', [ApiContractController::class, 'cancel']); // Résilier un contrat
+
+        // Utilitaires
+        Route::get('assures', [ApiContractController::class, 'getAssures']); // Liste des utilisateurs assurés
+
+        // --- ROUTES PRODUITS D'ASSURANCE ---
+        Route::get('products', [InsuranceProductController::class, 'index']); // Liste tous les produits
+        Route::post('products', [InsuranceProductController::class, 'store']); // Créer un produit
+        Route::get('products/available', [InsuranceProductController::class, 'available']); // Produits disponibles pour souscription
+        Route::get('products/{id}', [InsuranceProductController::class, 'show']); // Détails d'un produit
+        Route::put('products/{id}', [InsuranceProductController::class, 'update']); // Modifier un produit
+        Route::post('products/{id}/archive', [InsuranceProductController::class, 'archive']); // Archiver un produit
+        Route::delete('products/{id}', [InsuranceProductController::class, 'destroy']); // Supprimer un produit
 
         // --- ROUTES SINISTRES (CLAIMS) ---
         // Ajout des routes manquantes ici !

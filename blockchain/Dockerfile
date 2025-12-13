@@ -13,14 +13,18 @@ RUN apk add --no-cache \
     make \
     g++
 
-# Installer Truffle globalement
-RUN npm install -g truffle@5.11.5
-
 # Définir le répertoire de travail
 WORKDIR /app
 
 # Copier package.json et installer les dépendances
 COPY package*.json ./
+
+# Configurer npm pour gérer les problèmes de réseau
+RUN npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-retries 5
+
+# Installer les dépendances (incluant Truffle)
 RUN npm install
 
 # Copier les fichiers du projet
