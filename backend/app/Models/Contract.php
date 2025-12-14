@@ -46,7 +46,7 @@ class Contract extends Model
         'date_debut' => 'date',
         'date_fin' => 'date',
         'date_souscription' => 'date',
-        'prochaine_echeance' => 'date',
+        'prochaine_echeance' => 'datetime',
         'derniere_prime_payee_le' => 'datetime',
         'nombre_sinistres' => 'integer',
     ];
@@ -119,20 +119,18 @@ class Contract extends Model
             return;
         }
 
-        $dernierPaiement = $this->derniere_prime_payee_le;
-
         switch ($this->frequence_paiement) {
             case 'mensuelle':
-                $this->prochaine_echeance = $dernierPaiement->addMonth();
+                $this->prochaine_echeance = $this->derniere_prime_payee_le->copy()->addMonth();
                 break;
             case 'trimestrielle':
-                $this->prochaine_echeance = $dernierPaiement->addMonths(3);
+                $this->prochaine_echeance = $this->derniere_prime_payee_le->copy()->addMonths(3);
                 break;
             case 'semestrielle':
-                $this->prochaine_echeance = $dernierPaiement->addMonths(6);
+                $this->prochaine_echeance = $this->derniere_prime_payee_le->copy()->addMonths(6);
                 break;
             case 'annuelle':
-                $this->prochaine_echeance = $dernierPaiement->addYear();
+                $this->prochaine_echeance = $this->derniere_prime_payee_le->copy()->addYear();
                 break;
         }
     }

@@ -6,19 +6,23 @@ use App\Http\Requests\StoreClaimRequest;
 use App\Models\Claim;
 use App\Models\Contract;
 use App\Services\InsuranceBlockchainService;
+use App\Services\IPFSService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ClaimController extends Controller
 {
     private InsuranceBlockchainService $blockchainService;
+    private IPFSService $ipfsService;
 
-    public function __construct(InsuranceBlockchainService $blockchainService)
-    {
+    public function __construct(
+        InsuranceBlockchainService $blockchainService,
+        IPFSService $ipfsService
+    ) {
         $this->blockchainService = $blockchainService;
+        $this->ipfsService = $ipfsService;
     }
 
     /**
@@ -40,43 +44,43 @@ class ClaimController extends Controller
             return response()->json(['error' => 'Ce contrat ne vous appartient pas ou n\'existe pas.'], 403);
         }
 
-        // 4. Gestion de l'Upload vers IPFS Local
+        // 4. Gestion de l'Upload vers IPFS via IPFSService
         $ipfsHash = null;
         $fileName = null;
+        $gatewayUrl = null;
 
         if ($request->hasFile('proof_file')) {
             $file = $request->file('proof_file');
             $fileName = $file->getClientOriginalName();
 
             try {
-                // Code robuste pour la lecture
-                $realPath = $file->getRealPath();
-                $content = file_get_contents($realPath);
-
-                if ($content === false || empty($content)) {
-                    throw new \Exception("Le contenu du fichier est vide ou illisible.");
-                }
-
-                // Envoi à IPFS
-                $response = Http::attach(
-                    'file', 
-                    $content, 
-                    $fileName
-                )->post('http://127.0.0.1:5001/api/v0/add');
-
-                if ($response->successful()) {
-                    $ipfsHash = $response->json()['Hash'];
-                } else {
+                // Vérifier si IPFS est disponible
+                if (!$this->ipfsService->isAvailable()) {
                     return response()->json([
-                        'message' => 'Erreur lors de l\'envoi vers IPFS.',
-                        'details' => $response->body()
-                    ], 500);
+                        'message' => 'IPFS n\'est pas disponible.',
+                        'conseil' => 'Vérifiez que le daemon IPFS est démarré.'
+                    ], 503);
                 }
+
+                // Upload via IPFSService
+                $ipfsResult = $this->ipfsService->uploadFile($file);
+                $ipfsHash = $ipfsResult['hash'];
+                $gatewayUrl = $ipfsResult['gateway_url'];
+
+                Log::info('Fichier uploadé vers IPFS', [
+                    'hash' => $ipfsHash,
+                    'filename' => $fileName,
+                    'claim_user' => $user->id,
+                ]);
 
             } catch (\Exception $e) {
+                Log::error('Erreur upload IPFS dans ClaimController', [
+                    'error' => $e->getMessage(),
+                    'file' => $fileName,
+                ]);
+
                 return response()->json([
-                    'message' => 'Impossible de se connecter à IPFS ou de lire le fichier.',
-                    'conseil' => 'Vérifiez que ipfs daemon tourne.',
+                    'message' => 'Impossible d\'uploader le fichier vers IPFS.',
                     'erreur_technique' => $e->getMessage()
                 ], 500);
             }
@@ -115,7 +119,10 @@ class ClaimController extends Controller
                         'claim_id' => $blockchainResult['claimId'],
                         'transaction_hash' => $blockchainResult['txHash'],
                     ],
-                    'voir_fichier_ipfs' => "http://127.0.0.1:8080/ipfs/" . $ipfsHash
+                    'ipfs' => [
+                        'hash' => $ipfsHash,
+                        'gateway_url' => $gatewayUrl,
+                    ]
                 ], 201);
 
             } catch (\Exception $e) {
@@ -129,7 +136,10 @@ class ClaimController extends Controller
         return response()->json([
             'message' => 'Sinistre déclaré avec succès (Preuve sécurisée sur IPFS)',
             'claim' => $claim,
-            'voir_fichier_ipfs' => $ipfsHash ? "http://127.0.0.1:8080/ipfs/" . $ipfsHash : null,
+            'ipfs' => $ipfsHash ? [
+                'hash' => $ipfsHash,
+                'gateway_url' => $gatewayUrl,
+            ] : null,
             'info' => $contract->blockchain_policy_id
                 ? 'Fournissez une adresse Ethereum pour enregistrer sur la blockchain'
                 : 'Ce contrat n\'est pas encore sur la blockchain'

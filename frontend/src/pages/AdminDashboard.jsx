@@ -2,22 +2,28 @@ import { useState, useEffect } from "react";
 import "./AdminDashboard.css";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/ToastContainer';
 import productService from '../services/productService';
+import subscriptionService from '../services/subscriptionService';
 import CreateProductForm from '../components/CreateProductForm';
 
 export default function AdminDashboard() {
   const [activePage, setActivePage] = useState("create");
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { success: showSuccessToast, error: showErrorToast } = useToast();
 
   // États pour la gestion des produits
   const [products, setProducts] = useState([]);
+  const [pendingSubscriptions, setPendingSubscriptions] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Charger les produits au montage
+  // Charger les produits ou souscriptions selon la page active
   useEffect(() => {
     if (activePage === "products") {
       loadProducts();
+    } else if (activePage === "subscriptions") {
+      loadPendingSubscriptions();
     }
   }, [activePage]);
 
@@ -28,8 +34,47 @@ export default function AdminDashboard() {
       setProducts(data);
     } catch (err) {
       console.error('Erreur chargement produits:', err);
+      showErrorToast('Erreur lors du chargement des produits');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPendingSubscriptions = async () => {
+    setLoading(true);
+    try {
+      const data = await subscriptionService.getPending();
+      setPendingSubscriptions(data);
+    } catch (err) {
+      console.error('Erreur chargement souscriptions:', err);
+      showErrorToast('Erreur lors du chargement des souscriptions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (id) => {
+    if (window.confirm('Approuver cette souscription ?')) {
+      try {
+        await subscriptionService.approve(id);
+        showSuccessToast('Souscription approuvée avec succès !');
+        loadPendingSubscriptions();
+      } catch (err) {
+        showErrorToast('Erreur lors de l\'approbation');
+      }
+    }
+  };
+
+  const handleReject = async (id) => {
+    const reason = prompt('Raison du rejet (optionnel):');
+    if (reason !== null) {
+      try {
+        await subscriptionService.reject(id, reason);
+        showSuccessToast('Souscription rejetée');
+        loadPendingSubscriptions();
+      } catch (err) {
+        showErrorToast('Erreur lors du rejet');
+      }
     }
   };
 
@@ -113,9 +158,10 @@ export default function AdminDashboard() {
         )}
 
         {activePage === "products" && (
-          <div className="card">
-            <h3>Mes produits d'assurance</h3>
-            <hr className="title-line" />
+          <div className="card_container">
+            <div className="card">
+              <h3>Mes produits d'assurance</h3>
+              <hr className="title-line" />
 
             {loading ? (
               <p style={{ textAlign: 'center', padding: '20px' }}>Chargement...</p>
@@ -166,6 +212,7 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             )}
+            </div>
           </div>
         )}
 
@@ -173,9 +220,90 @@ export default function AdminDashboard() {
           <div className="card">
             <h3>Valider les souscriptions</h3>
             <hr className="title-line" />
-            <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
-              Fonctionnalité à venir - Ici vous pourrez valider les demandes de souscription des assurés.
-            </p>
+
+            {loading ? (
+              <p style={{ textAlign: 'center', padding: '20px' }}>Chargement...</p>
+            ) : pendingSubscriptions.length === 0 ? (
+              <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                Aucune souscription en attente
+              </p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f5f5f5' }}>
+                      <th style={{ padding: '12px', textAlign: 'left' }}>N° Police</th>
+                      <th style={{ padding: '12px', textAlign: 'left' }}>Assuré</th>
+                      <th style={{ padding: '12px', textAlign: 'left' }}>Produit</th>
+                      <th style={{ padding: '12px', textAlign: 'left' }}>Type</th>
+                      <th style={{ padding: '12px', textAlign: 'right' }}>Couverture</th>
+                      <th style={{ padding: '12px', textAlign: 'center' }}>Date début</th>
+                      <th style={{ padding: '12px', textAlign: 'center' }}>Date fin</th>
+                      <th style={{ padding: '12px', textAlign: 'center' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingSubscriptions.map(subscription => (
+                      <tr key={subscription.id} style={{ borderBottom: '1px solid #ddd' }}>
+                        <td style={{ padding: '12px' }}>{subscription.numero_police}</td>
+                        <td style={{ padding: '12px' }}>
+                          {subscription.user?.nom} {subscription.user?.prenom}
+                          <br />
+                          <span style={{ fontSize: '1.1rem', color: '#666' }}>
+                            {subscription.user?.email}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          {subscription.insurance_product?.nom_produit || 'N/A'}
+                        </td>
+                        <td style={{ padding: '12px' }}>{subscription.type_assurance}</td>
+                        <td style={{ padding: '12px', textAlign: 'right' }}>
+                          {parseFloat(subscription.montant_couverture).toLocaleString()} €
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                          {new Date(subscription.date_debut).toLocaleDateString()}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                          {new Date(subscription.date_fin).toLocaleDateString()}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => handleApprove(subscription.id)}
+                              style={{
+                                padding: '5px 10px',
+                                backgroundColor: '#4caf50',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '1.2rem'
+                              }}
+                            >
+                              ✓ Approuver
+                            </button>
+                            <button
+                              onClick={() => handleReject(subscription.id)}
+                              style={{
+                                padding: '5px 10px',
+                                backgroundColor: '#f44336',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '1.2rem'
+                              }}
+                            >
+                              ✗ Rejeter
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 

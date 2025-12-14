@@ -31,7 +31,7 @@ services:
     container_name: assurance_ganache
     restart: unless-stopped
     ports:
-      - "7545:8545"  # Port externe:interne
+      - "7545:8545"  # Port RPC externe:interne
     command:
       - --mnemonic
       - "myth like bonus scare over problem client lizard pioneer submit female collect"
@@ -47,6 +47,7 @@ services:
       - "100"
       - --host
       - "0.0.0.0"
+      - --verbose  # Affiche plus de logs pour le debug
     networks:
       - assurance_network
     healthcheck:
@@ -55,6 +56,22 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+
+  # ========================================
+  # Blockchain Explorer - Interface Web
+  # ========================================
+  explorer:
+    image: alethio/ethereum-lite-explorer:latest
+    container_name: assurance_explorer
+    restart: unless-stopped
+    ports:
+      - "8545:80"  # Interface web
+    environment:
+      - APP_NODE_URL=http://ganache:8545
+    networks:
+      - assurance_network
+    depends_on:
+      - ganache
 
   # ========================================
   # IPFS - Stockage Décentralisé

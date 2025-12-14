@@ -5,6 +5,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\Api\ContractController as ApiContractController;
 use App\Http\Controllers\Api\InsuranceProductController;
+use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\IPFSController;
+use App\Http\Controllers\Api\PremiumController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\BlockchainTestController;
 
@@ -47,6 +52,13 @@ Route::controller(AuthController::class)->group(function () {
         Route::post('products/{id}/archive', [InsuranceProductController::class, 'archive']); // Archiver un produit
         Route::delete('products/{id}', [InsuranceProductController::class, 'destroy']); // Supprimer un produit
 
+        // --- ROUTES SOUSCRIPTIONS ---
+        Route::post('subscriptions', [SubscriptionController::class, 'store']); // Créer une demande de souscription
+        Route::get('subscriptions/my', [SubscriptionController::class, 'mySubscriptions']); // Mes souscriptions
+        Route::get('subscriptions/pending', [SubscriptionController::class, 'pending']); // Souscriptions en attente (admin)
+        Route::post('subscriptions/{id}/approve', [SubscriptionController::class, 'approve']); // Approuver une souscription (admin)
+        Route::post('subscriptions/{id}/reject', [SubscriptionController::class, 'reject']); // Rejeter une souscription (admin)
+
         // --- ROUTES SINISTRES (CLAIMS) ---
         // Ajout des routes manquantes ici !
 
@@ -62,8 +74,51 @@ Route::controller(AuthController::class)->group(function () {
 
         // 4. Déclarer/Soumettre un nouveau Sinistre (celui qui fonctionnait)
         Route::post('claims', [ClaimController::class, 'store'])
-             ->middleware('throttle:10,1');   
+             ->middleware('throttle:10,1');
         Route::delete('claims/{id}', [ClaimController::class, 'destroy']);
+
+        // --- ROUTES IPFS ---
+        Route::prefix('ipfs')->group(function () {
+            Route::post('upload', [IPFSController::class, 'upload']); // Upload fichier(s) vers IPFS
+            Route::get('{hash}', [IPFSController::class, 'get']); // Récupérer un fichier IPFS
+            Route::get('{hash}/url', [IPFSController::class, 'getUrl']); // Obtenir l'URL du gateway
+            Route::post('pin', [IPFSController::class, 'pin']); // Pin un fichier
+            Route::get('status', [IPFSController::class, 'status']); // Vérifier le statut d'IPFS
+        });
+
+        // --- ROUTES PRIMES (PREMIUMS) ---
+        Route::prefix('premiums')->group(function () {
+            Route::get('/', [PremiumController::class, 'index']); // Liste des paiements de primes
+            Route::post('/', [PremiumController::class, 'store']); // Enregistrer un paiement
+            Route::get('stats', [PremiumController::class, 'stats']); // Statistiques des primes
+            Route::get('overdue', [PremiumController::class, 'checkOverdue']); // Vérifier les impayés
+            Route::get('contract/{contractId}', [PremiumController::class, 'getContractHistory']); // Historique par contrat
+            Route::get('{id}', [PremiumController::class, 'show']); // Détails d'un paiement
+            Route::put('{id}', [PremiumController::class, 'update']); // Mettre à jour un paiement
+        });
+
+        // --- ROUTES NOTIFICATIONS ---
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']); // Liste des notifications
+            Route::get('unread-count', [NotificationController::class, 'unreadCount']); // Compteur non lues
+            Route::get('recent', [NotificationController::class, 'recent']); // Notifications récentes (24h)
+            Route::post('mark-all-read', [NotificationController::class, 'markAllAsRead']); // Tout marquer comme lu
+            Route::delete('read', [NotificationController::class, 'deleteRead']); // Supprimer les lues
+            Route::get('{id}', [NotificationController::class, 'show']); // Détails d'une notification
+            Route::post('{id}/read', [NotificationController::class, 'markAsRead']); // Marquer comme lue
+            Route::post('{id}/unread', [NotificationController::class, 'markAsUnread']); // Marquer comme non lue
+            Route::delete('{id}', [NotificationController::class, 'destroy']); // Supprimer une notification
+        });
+
+        // --- ROUTES ACTIVITY LOGS ---
+        Route::prefix('activity-logs')->group(function () {
+            Route::get('/', [ActivityLogController::class, 'index']); // Liste des logs
+            Route::get('stats', [ActivityLogController::class, 'stats']); // Statistiques
+            Route::get('recent', [ActivityLogController::class, 'recent']); // Logs récents (24h)
+            Route::get('by-subject', [ActivityLogController::class, 'bySubject']); // Logs par entité
+            Route::delete('cleanup', [ActivityLogController::class, 'cleanup']); // Nettoyage (admin)
+            Route::get('{id}', [ActivityLogController::class, 'show']); // Détails d'un log
+        });
     });
 });
 
