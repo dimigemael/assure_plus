@@ -6,6 +6,7 @@ import { useToast } from '../components/ToastContainer';
 import productService from '../services/productService';
 import subscriptionService from '../services/subscriptionService';
 import SubscriptionForm from '../components/SubscriptionForm';
+import PremiumPayment from '../components/PremiumPayment';
 
 export default function AssureDashboard() {
   const { user, logout } = useAuth();
@@ -105,14 +106,21 @@ export default function AssureDashboard() {
         </div>
 
         <ul className="menu">
-          <li 
+          <li
             className={activePage === "suscribe" ? "active" : ""}
             onClick={() => setActivePage("suscribe")}
           >
            Consulter/souscrire à un produit d'assurance
           </li>
 
-          <li 
+          <li
+            className={activePage === "pay_premium" ? "active" : ""}
+            onClick={() => setActivePage("pay_premium")}
+          >
+            💳 Payer mes primes
+          </li>
+
+          <li
             className={activePage === "declare" ? "active" : ""}
             onClick={() => setActivePage("declare")}
           >
@@ -313,6 +321,14 @@ export default function AssureDashboard() {
           </div>
         )}
 
+        {/* --- PAIEMENT DE PRIMES --- */}
+        {activePage === "pay_premium" && (
+          <div className="card_container">
+            <div className="card">
+              <PremiumPayment />
+            </div>
+          </div>
+        )}
 
         {activePage === "list" && (
           <div className="card">
