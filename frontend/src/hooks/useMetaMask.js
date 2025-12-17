@@ -185,6 +185,12 @@ export const useMetaMask = () => {
       .catch(console.error);
   }, []);
 
+  // Formater une adresse Ethereum (0x1234...5678)
+  const formatAddress = (address) => {
+    if (!address) return '';
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
+
   return {
     account,
     balance,
@@ -200,5 +206,8 @@ export const useMetaMask = () => {
     switchNetwork,
     sendTransaction,
     signMessage,
+    formatAddress,
   };
 };
+
+export default useMetaMask;
