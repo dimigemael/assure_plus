@@ -155,11 +155,14 @@ class ClaimController extends Controller
 
         // 1. Déterminer les sinistres à afficher selon le rôle
         if ($user->role === 'admin' || $user->role === 'expert') {
-            // ADMIN ou EXPERT voit TOUS les sinistres
-            $claims = Claim::orderBy('created_at', 'desc')->get(); 
+            // ADMIN ou EXPERT voit TOUS les sinistres avec les relations
+            $claims = Claim::with(['user', 'contract', 'expert'])
+                           ->orderBy('created_at', 'desc')
+                           ->get();
         } else {
-            // Utilisateur CLÉ voit SEULEMENT ses propres sinistres
-            $claims = Claim::where('user_id', $user->id)
+            // Utilisateur CLÉ voit SEULEMENT ses propres sinistres avec les relations
+            $claims = Claim::with(['user', 'contract', 'expert'])
+                           ->where('user_id', $user->id)
                            ->orderBy('created_at', 'desc')
                            ->get();
         }

@@ -1,51 +1,58 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./ExpertDashboard.css";
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/ToastContainer';
+import claimService from '../services/claimService';
+import currencyService from '../services/currencyService';
 
 export default function ExpertDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  // Par défaut, "en-attente" est actif
+  const { success: showSuccessToast, error: showErrorToast } = useToast();
   const [activePage, setActivePage] = useState("en-attente");
+  const [sinistres, setSinistres] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadClaims();
+  }, []);
+
+  const loadClaims = async () => {
+    setLoading(true);
+    try {
+      const data = await claimService.getAll();
+      setSinistres(data);
+    } catch (err) {
+      console.error('Erreur chargement sinistres:', err);
+      showErrorToast('Erreur lors du chargement des sinistres');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
   };
 
-  // Exemple de sinistres déclarés
-  const [sinistres, setSinistres] = useState([
-    {
-      id: 1,
-      description: "Accident de voiture",
-      claimedAmount: 250000,
-      proofs: ["photo1.jpg", "rapport.pdf"],
-      status: "en-attente",
-    },
-    {
-      id: 2,
-      description: "Dégât des eaux",
-      claimedAmount: 150000,
-      proofs: ["photo2.jpg"],
-      status: "en-attente",
-    },
-    {
-      id: 3,
-      description: "incendie",
-      claimedAmount: 150000,
-      proofs: ["photo2.jpg"],
-      status: "en-attente",
-    },
-  ]);
-
-  // Gestion de la validation ou du rejet
-  const handleDecision = (id, decision) => {
-    setSinistres((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, status: decision } : s
-      )
-    );
+  const handleDecision = async (id, decision) => {
+    setLoading(true);
+    try {
+      if (decision === 'valide') {
+        const claim = sinistres.find(s => s.id === id);
+        await claimService.approve(id, claim.montant_reclame, 'Sinistre approuvé par l\'expert');
+        showSuccessToast('Sinistre validé avec succès');
+      } else if (decision === 'rejete') {
+        await claimService.reject(id, 'Sinistre rejeté après évaluation');
+        showSuccessToast('Sinistre rejeté');
+      }
+      await loadClaims();
+    } catch (err) {
+      showErrorToast(typeof err === 'string' ? err : 'Erreur lors de la mise à jour du sinistre');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -99,53 +106,140 @@ export default function ExpertDashboard() {
         {/* --- SINISTRES --- */}
         {activePage === "en-attente" && (
           <div className="card_container">
-            {sinistres
-              .filter((s) => s.status === "en-attente")
-              .map((sinistre) => (
-                <div key={sinistre.id} className="card sinister-card">
-                  <h3>{sinistre.description}</h3>
-                  <hr className="title-line" />
-                  <p><strong>Montant réclamé :</strong> {sinistre.claimedAmount.toLocaleString()} FCFA</p>
-                  <p><strong>Preuves :</strong></p>
-                  <div className="proofs-container">
-                    {sinistre.proofs.map((file, index) => (
-                        <span key={index} className="proof-item">{file}</span>
-                    ))}
+            {loading ? (
+              <div className="card">
+                <p style={{ textAlign: 'center', padding: '20px' }}>Chargement des sinistres...</p>
+              </div>
+            ) : sinistres.filter((s) => s.status === "en_attente").length === 0 ? (
+              <div className="card">
+                <h3>Aucun sinistre en attente</h3>
+                <hr className="title-line" />
+                <p style={{ textAlign: 'center', color: '#666' }}>
+                  Aucun sinistre en attente de traitement.
+                </p>
+              </div>
+            ) : (
+              sinistres
+                .filter((s) => s.status === "en_attente")
+                .map((sinistre) => (
+                  <div key={sinistre.id} className="card sinister-card">
+                    <h3>{sinistre.description}</h3>
+                    <hr className="title-line" />
+                    <p><strong>Montant réclamé :</strong> {currencyService.formatXAF(parseFloat(sinistre.montant_reclame))}</p>
+                    {sinistre.proof_file && (
+                      <>
+                        <p><strong>Preuve :</strong></p>
+                        <div className="proofs-container">
+                          <span className="proof-item">{sinistre.proof_file}</span>
+                          {sinistre.ipfs_hash && (
+                            <span className="proof-item" style={{ fontSize: '1.1rem', color: '#666' }}>
+                              IPFS: {sinistre.ipfs_hash.substring(0, 10)}...
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                    {sinistre.user && (
+                      <p style={{ fontSize: '1.2rem', color: '#666', marginTop: '10px' }}>
+                        <strong>Assuré :</strong> {sinistre.user.nom} {sinistre.user.prenom}
+                      </p>
+                    )}
+                    <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+                      <button
+                        onClick={() => handleDecision(sinistre.id, "valide")}
+                        disabled={loading}
+                      >
+                        Valider
+                      </button>
+                      <button
+                        onClick={() => handleDecision(sinistre.id, "rejete")}
+                        disabled={loading}
+                      >
+                        Rejeter
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-                    <button onClick={() => handleDecision(sinistre.id, "valide")}>Valider</button>
-                    <button onClick={() => handleDecision(sinistre.id, "rejete")}>Rejeter</button>
-                  </div>
-                </div>
-              ))}
+                ))
+            )}
           </div>
         )}
 
         {activePage === "rejete" && (
           <div className="card_container">
-            {sinistres
-              .filter((s) => s.status === "rejete")
-              .map((sinistre) => (
-                <div key={sinistre.id} className="card sinister-card">
-                  <h3>{sinistre.description}</h3>
-                  <p>Montant réclamé : {sinistre.claimedAmount.toLocaleString()} FCFA</p>
-                  <p>Status : Rejeté</p>
-                </div>
-              ))}
+            {loading ? (
+              <div className="card">
+                <p style={{ textAlign: 'center', padding: '20px' }}>Chargement...</p>
+              </div>
+            ) : sinistres.filter((s) => s.status === "rejeté").length === 0 ? (
+              <div className="card">
+                <h3>Aucun sinistre rejeté</h3>
+                <hr className="title-line" />
+                <p style={{ textAlign: 'center', color: '#666' }}>
+                  Aucun sinistre rejeté pour le moment.
+                </p>
+              </div>
+            ) : (
+              sinistres
+                .filter((s) => s.status === "rejeté")
+                .map((sinistre) => (
+                  <div key={sinistre.id} className="card sinister-card">
+                    <h3>{sinistre.description}</h3>
+                    <hr className="title-line" />
+                    <p><strong>Montant réclamé :</strong> {currencyService.formatXAF(parseFloat(sinistre.montant_reclame))}</p>
+                    {sinistre.commentaire_expert && (
+                      <p><strong>Commentaire :</strong> {sinistre.commentaire_expert}</p>
+                    )}
+                    {sinistre.user && (
+                      <p style={{ fontSize: '1.2rem', color: '#666' }}>
+                        <strong>Assuré :</strong> {sinistre.user.nom} {sinistre.user.prenom}
+                      </p>
+                    )}
+                    <p style={{ color: '#f44336', fontWeight: 'bold', marginTop: '10px' }}>Status : Rejeté</p>
+                  </div>
+                ))
+            )}
           </div>
         )}
 
         {activePage === "valide" && (
           <div className="card_container">
-            {sinistres
-              .filter((s) => s.status === "valide")
-              .map((sinistre) => (
-                <div key={sinistre.id} className="card sinister-card">
-                  <h3>{sinistre.description}</h3>
-                  <p>Montant réclamé : {sinistre.claimedAmount.toLocaleString()} FCFA</p>
-                  <p>Status : Validé / indemnisé</p>
-                </div>
-              ))}
+            {loading ? (
+              <div className="card">
+                <p style={{ textAlign: 'center', padding: '20px' }}>Chargement...</p>
+              </div>
+            ) : sinistres.filter((s) => s.status === "approuvé" || s.status === "payé").length === 0 ? (
+              <div className="card">
+                <h3>Aucun sinistre validé</h3>
+                <hr className="title-line" />
+                <p style={{ textAlign: 'center', color: '#666' }}>
+                  Aucun sinistre validé ou indemnisé pour le moment.
+                </p>
+              </div>
+            ) : (
+              sinistres
+                .filter((s) => s.status === "approuvé" || s.status === "payé")
+                .map((sinistre) => (
+                  <div key={sinistre.id} className="card sinister-card">
+                    <h3>{sinistre.description}</h3>
+                    <hr className="title-line" />
+                    <p><strong>Montant réclamé :</strong> {currencyService.formatXAF(parseFloat(sinistre.montant_reclame))}</p>
+                    {sinistre.montant_approuve && (
+                      <p><strong>Montant approuvé :</strong> {currencyService.formatXAF(parseFloat(sinistre.montant_approuve))}</p>
+                    )}
+                    {sinistre.commentaire_expert && (
+                      <p><strong>Commentaire :</strong> {sinistre.commentaire_expert}</p>
+                    )}
+                    {sinistre.user && (
+                      <p style={{ fontSize: '1.2rem', color: '#666' }}>
+                        <strong>Assuré :</strong> {sinistre.user.nom} {sinistre.user.prenom}
+                      </p>
+                    )}
+                    <p style={{ color: sinistre.status === "payé" ? '#2196f3' : '#4caf50', fontWeight: 'bold', marginTop: '10px' }}>
+                      Status : {sinistre.status === "payé" ? "Payé" : "Validé / En attente de paiement"}
+                    </p>
+                  </div>
+                ))
+            )}
           </div>
         )}
       </div>

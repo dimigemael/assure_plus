@@ -6,6 +6,7 @@ import { useToast } from '../components/ToastContainer';
 import productService from '../services/productService';
 import subscriptionService from '../services/subscriptionService';
 import currencyService from '../services/currencyService';
+import claimService from '../services/claimService';
 import SubscriptionForm from '../components/SubscriptionForm';
 import PremiumPayment from '../components/PremiumPayment';
 
@@ -18,13 +19,15 @@ export default function AssureDashboard() {
   const [showSubscriptionForm, setShowSubscriptionForm] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  // États pour les produits disponibles
+  // États pour les produits disponibles et les contrats actifs
   const [products, setProducts] = useState([]);
+  const [myContracts, setMyContracts] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Charger les produits disponibles au montage
+  // Charger les produits disponibles et les contrats actifs au montage
   useEffect(() => {
     loadAvailableProducts();
+    loadMyContracts();
   }, []);
 
   const loadAvailableProducts = async () => {
@@ -37,6 +40,17 @@ export default function AssureDashboard() {
       showErrorToast('Erreur lors du chargement des produits');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMyContracts = async () => {
+    try {
+      const data = await subscriptionService.getMySubscriptions();
+      // Filtrer uniquement les contrats actifs
+      const activeContracts = data.filter(contract => contract.status === 'actif');
+      setMyContracts(activeContracts);
+    } catch (err) {
+      console.error('Erreur chargement contrats:', err);
     }
   };
 
@@ -82,16 +96,34 @@ export default function AssureDashboard() {
     }
   };
 
-  const handleSinisterSubmit = (e) => {
+  const handleSinisterSubmit = async (e) => {
     e.preventDefault();
-    // Ici, vous ajouteriez la logique de soumission à une API
-    console.log("Sinistre à déclarer :", sinisterDetails);
-    showSuccessToast(`Déclaration de sinistre reçue : ${sinisterDetails.description}. Montant réclamé : ${sinisterDetails.claimedAmount} FCFA.`, 5000);
+    setLoading(true);
 
-    // Réinitialiser le formulaire
-    setSinisterDetails({ description: '', claimedAmount: '', proofs: null });
-    setShowForm(false);
-    setSelectedProduct(null);
+    try {
+      // Créer un FormData pour envoyer le fichier
+      const formData = new FormData();
+      formData.append('contract_id', selectedProduct.id);
+      formData.append('description', sinisterDetails.description);
+      formData.append('montant_reclame', sinisterDetails.claimedAmount);
+
+      if (sinisterDetails.proofs) {
+        formData.append('proof_file', sinisterDetails.proofs);
+      }
+
+      await claimService.create(formData);
+
+      showSuccessToast('Déclaration de sinistre envoyée avec succès ! Elle sera examinée par un expert.', 5000);
+
+      // Réinitialiser le formulaire
+      setSinisterDetails({ description: '', claimedAmount: '', proofs: null });
+      setShowForm(false);
+      setSelectedProduct(null);
+    } catch (err) {
+      showErrorToast(typeof err === 'string' ? err : 'Erreur lors de la déclaration du sinistre');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -215,38 +247,39 @@ export default function AssureDashboard() {
         {activePage === "declare" && (
           <div className="card_container">
 
-            {/* === ÉTAPE 1 : AFFICHER LISTE DES PRODUITS === */}
+            {/* === ÉTAPE 1 : AFFICHER LISTE DES CONTRATS ACTIFS === */}
             {!showForm && (
               <>
                 {loading ? (
                   <div className="card">
                     <p style={{ textAlign: 'center', padding: '20px' }}>Chargement...</p>
                   </div>
-                ) : products.length === 0 ? (
+                ) : myContracts.length === 0 ? (
                   <div className="card">
-                    <h3>Aucun produit disponible</h3>
+                    <h3>Aucun contrat actif</h3>
                     <hr className="title-line" />
                     <p style={{ textAlign: 'center', color: '#666' }}>
                       Vous n'avez pas de contrats actifs pour déclarer un sinistre.
                     </p>
                   </div>
                 ) : (
-                  products.map((product, index) => (
+                  myContracts.map((contract, index) => (
                     <div key={index} className="card">
-                      <h3>{product.nom_produit}</h3>
+                      <h3>{contract.type_assurance}</h3>
                       <hr className="title-line" />
 
-                      <p><strong>Type :</strong> {product.type_assurance}</p>
-                      <p><strong>Montant couverture :</strong> {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}</p>
-                      <p><strong>Prime {product.frequence_paiement} :</strong> {currencyService.formatXAF(parseFloat(product.prime_base))}</p>
+                      <p><strong>N° Police :</strong> {contract.numero_police}</p>
+                      <p><strong>Montant couverture :</strong> {currencyService.formatXAF(parseFloat(contract.montant_couverture))}</p>
+                      <p><strong>Date début :</strong> {new Date(contract.date_debut).toLocaleDateString('fr-FR')}</p>
+                      <p><strong>Date fin :</strong> {new Date(contract.date_fin).toLocaleDateString('fr-FR')}</p>
 
                       <button
                         onClick={() => {
-                          setSelectedProduct(product);
+                          setSelectedProduct(contract);
                           setShowForm(true);
                         }}
                       >
-                        Déclarer un sinistre<br/> pour ce produit
+                        Déclarer un sinistre<br/> pour ce contrat
                       </button>
                     </div>
                   ))
