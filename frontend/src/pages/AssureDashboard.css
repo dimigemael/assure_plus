@@ -110,8 +110,11 @@ html{
 .card_container{
   display: flex;
   flex-wrap: wrap;       /* permet plusieurs cartes sur une ligne */
-  gap: 5rem;         
+  gap: 5rem;
   justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 2rem;
 }
 
 /* --- CARD --- */
@@ -272,5 +275,25 @@ html{
 }
 
 .sinister-submit-btn:hover {
-  background: #4D901D; 
+  background: #4D901D;
+}
+
+/* Bouton retour */
+.go-back-btn {
+  width: 100%;
+  padding: 1.2rem 1.5rem;
+  background: transparent;
+  color: var(--DashboardtextColor_sidebar);
+  border: 1px solid var(--StrokeGrey);
+  border-radius: 0.6rem;
+  cursor: pointer;
+  font-size: 1.6rem;
+  font-weight: 500;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.go-back-btn:hover {
+  background: var(--GeneralBackground);
+  border-color: var(--DashboardtextColor_sidebar);
 }

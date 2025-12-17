@@ -129,9 +129,11 @@ html {
 /* --- CARD CONTAINER --- */
 .card_container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 cartes par ligne */
+    grid-template-columns: repeat(auto-fit, minmax(30rem, 1fr)); /* responsive avec minimum 30rem */
     gap: 2rem; /* espace entre les cartes */
     justify-items: center;
+    width: 100%;
+    max-width: 100%;
     margin-top: 2rem;
 }
 /* --- CARDS SINISTRES --- */
