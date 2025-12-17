@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastContainer';
 import productService from '../services/productService';
 import subscriptionService from '../services/subscriptionService';
+import currencyService from '../services/currencyService';
 import SubscriptionForm from '../components/SubscriptionForm';
 import PremiumPayment from '../components/PremiumPayment';
 
@@ -179,9 +180,9 @@ export default function AssureDashboard() {
 
                   <p><strong>Type :</strong> {product.type_assurance}</p>
                   <p><strong>Description :</strong> {product.description || 'Non spécifiée'}</p>
-                  <p><strong>Montant couverture :</strong> {parseFloat(product.montant_couverture_base).toLocaleString()} €</p>
-                  <p><strong>Prime {product.frequence_paiement} :</strong> {parseFloat(product.prime_base).toLocaleString()} €</p>
-                  <p><strong>Franchise :</strong> {parseFloat(product.franchise_base).toLocaleString()} €</p>
+                  <p><strong>Montant couverture :</strong> {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}</p>
+                  <p><strong>Prime {product.frequence_paiement} :</strong> {currencyService.formatXAF(parseFloat(product.prime_base))}</p>
+                  <p><strong>Franchise :</strong> {currencyService.formatXAF(parseFloat(product.franchise_base))}</p>
 
                   {product.garanties_incluses && product.garanties_incluses.length > 0 && (
                     <div style={{ marginTop: '15px', fontSize: '1.3rem' }}>
@@ -236,8 +237,8 @@ export default function AssureDashboard() {
                       <hr className="title-line" />
 
                       <p><strong>Type :</strong> {product.type_assurance}</p>
-                      <p><strong>Montant couverture :</strong> {parseFloat(product.montant_couverture_base).toLocaleString()} €</p>
-                      <p><strong>Prime {product.frequence_paiement} :</strong> {parseFloat(product.prime_base).toLocaleString()} €</p>
+                      <p><strong>Montant couverture :</strong> {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}</p>
+                      <p><strong>Prime {product.frequence_paiement} :</strong> {currencyService.formatXAF(parseFloat(product.prime_base))}</p>
 
                       <button
                         onClick={() => {

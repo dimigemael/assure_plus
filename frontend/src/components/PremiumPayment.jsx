@@ -2,17 +2,22 @@ import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import subscriptionService from '../services/subscriptionService';
 import premiumService from '../services/premiumService';
+import currencyService from '../services/currencyService';
+import useMetaMask from '../hooks/useMetaMask';
+import SmartContractService from '../services/smartContractService';
 import { useToast } from './ToastContainer';
 import './PremiumPayment.css';
 
 const PremiumPayment = () => {
-  const { success: showSuccessToast, error: showErrorToast, warning: showWarningToast } = useToast();
+  const { success: showSuccessToast, error: showErrorToast, warning: showWarningToast, info: showInfoToast } = useToast();
+  const { account, signer, isConnected, connect, balance, formatAddress } = useMetaMask();
   const [myContracts, setMyContracts] = useState([]);
   const [selectedContract, setSelectedContract] = useState(null);
   const [premiumHistory, setPremiumHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [smartContractService] = useState(new SmartContractService());
 
   // Charger les contrats de l'utilisateur
   useEffect(() => {
@@ -66,25 +71,74 @@ const PremiumPayment = () => {
     setLoading(true);
 
     try {
-      const paymentData = {
-        contract_id: selectedContract.id,
-        montant: parseFloat(paymentAmount),
-      };
-
-      await premiumService.create(paymentData);
-      showSuccessToast('Paiement enregistré avec succès ! Votre prime sera validée par un administrateur.', 5000);
-
-      // Recharger l'historique et la liste des contrats
-      await loadPremiumHistory(selectedContract.id);
-      await loadMyContracts();
-
-      // Réinitialiser le formulaire
-      setPaymentAmount(selectedContract.prime);
+      await handleBlockchainPayment();
     } catch (err) {
       showErrorToast(typeof err === 'string' ? err : 'Erreur lors du paiement');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBlockchainPayment = async () => {
+    // Vérifier la connexion MetaMask
+    if (!isConnected) {
+      showInfoToast('Connexion à MetaMask...');
+      try {
+        await connect();
+      } catch (error) {
+        throw new Error('Veuillez connecter MetaMask pour payer via blockchain');
+      }
+    }
+
+    // Convertir XAF en ETH
+    const xafAmount = parseFloat(paymentAmount);
+    const { ethWithMargin, ethAmount, gasEstimate } = currencyService.calculateETHForPayment(xafAmount);
+
+    // Vérifier le solde
+    const balanceCheck = currencyService.checkSufficientBalance(parseFloat(balance), xafAmount);
+    if (!balanceCheck.sufficient) {
+      throw new Error(
+        `Solde insuffisant. Requis: ${ethWithMargin.toFixed(6)} ETH (${currencyService.formatXAF(xafAmount)}), ` +
+        `Disponible: ${balance} ETH`
+      );
+    }
+
+    showInfoToast(`Paiement de ${currencyService.formatXAF(xafAmount)} (${ethAmount.toFixed(6)} ETH + ${gasEstimate.toFixed(6)} ETH de gas)...`);
+
+    // Initialiser le smart contract
+    if (!smartContractService.contractAddress) {
+      // Utiliser l'adresse du contrat depuis l'environnement ou un contrat de test
+      const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
+      smartContractService.setContractAddress(contractAddress);
+    }
+
+    await smartContractService.initialize(signer);
+
+    // Effectuer le paiement via smart contract
+    // Note: Le policyId devrait être stocké dans le contrat côté backend
+    const policyId = selectedContract.blockchain_policy_id || selectedContract.id;
+
+    const txResult = await smartContractService.payPremium(policyId, ethAmount);
+
+    // Enregistrer le paiement dans la base de données
+    const paymentData = {
+      contract_id: selectedContract.id,
+      montant: parseFloat(paymentAmount),
+      transaction_hash: txResult.transactionHash,
+      block_number: txResult.blockNumber,
+    };
+
+    await premiumService.create(paymentData);
+
+    showSuccessToast(
+      `✓ Paiement blockchain réussi ! Transaction: ${txResult.transactionHash.substring(0, 10)}...`,
+      7000
+    );
+
+    // Recharger les données
+    await loadPremiumHistory(selectedContract.id);
+    await loadMyContracts();
+    setPaymentAmount(selectedContract.prime);
   };
 
   const formatDate = (dateString) => {
@@ -158,11 +212,11 @@ const PremiumPayment = () => {
                   <div className="contract-details">
                     <div className="detail-row">
                       <span className="label">Couverture:</span>
-                      <span className="value">{parseFloat(contract.montant_couverture).toLocaleString()} €</span>
+                      <span className="value">{currencyService.formatXAF(parseFloat(contract.montant_couverture))}</span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Prime {premiumService.formatFrequence(contract.frequence_paiement)}:</span>
-                      <span className="value highlight">{parseFloat(contract.prime).toLocaleString()} €</span>
+                      <span className="value highlight">{currencyService.formatXAF(parseFloat(contract.prime))}</span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Prochaine échéance:</span>
@@ -206,12 +260,15 @@ const PremiumPayment = () => {
           <div className="contract-summary">
             <h4>Contrat: {selectedContract.numero_police}</h4>
             <p><strong>Type:</strong> {selectedContract.type_assurance}</p>
-            <p><strong>Montant de la prime:</strong> {parseFloat(selectedContract.prime).toLocaleString()} €</p>
+            <p><strong>Montant de la prime:</strong> {currencyService.formatXAF(parseFloat(selectedContract.prime))}</p>
             <p><strong>Fréquence:</strong> {premiumService.formatFrequence(selectedContract.frequence_paiement)}</p>
+            {isConnected && (
+              <p><strong>Wallet connecté:</strong> {formatAddress(account)} ({parseFloat(balance).toFixed(4)} ETH)</p>
+            )}
           </div>
 
           <form onSubmit={handlePayment} className="payment-form">
-            <label>Montant à payer (€) *</label>
+            <label>Montant à payer (XAF) *</label>
             <input
               type="number"
               step="0.01"
@@ -223,7 +280,17 @@ const PremiumPayment = () => {
             />
 
             <div className="form-note">
-              Note: Le paiement sera validé par un administrateur après vérification.
+              {!isConnected ? (
+                <>
+                  ⚠️ Vous devez connecter MetaMask pour payer via la blockchain.
+                  Le paiement sera automatiquement validé sur la blockchain Ethereum.
+                </>
+              ) : (
+                <>
+                  💰 Paiement via blockchain Ethereum.
+                  Équivalent: ~{currencyService.xafToETH(parseFloat(paymentAmount || 0)).toFixed(6)} ETH
+                </>
+              )}
             </div>
 
             <button
@@ -231,7 +298,7 @@ const PremiumPayment = () => {
               className="submit-button"
               disabled={loading}
             >
-              {loading ? 'Traitement...' : 'Confirmer le paiement'}
+              {loading ? 'Traitement blockchain...' : isConnected ? '🔗 Payer via Blockchain' : '🦊 Connecter MetaMask et Payer'}
             </button>
           </form>
 
@@ -251,7 +318,7 @@ const PremiumPayment = () => {
                     {premiumHistory.map((premium) => (
                       <tr key={premium.id}>
                         <td>{formatDate(premium.date_paiement)}</td>
-                        <td>{parseFloat(premium.montant).toLocaleString()} €</td>
+                        <td>{currencyService.formatXAF(parseFloat(premium.montant))}</td>
                         <td>{getStatusBadge(premium.statut)}</td>
                       </tr>
                     ))}
@@ -263,7 +330,7 @@ const PremiumPayment = () => {
                 <div className="stat-item">
                   <span className="stat-label">Total payé:</span>
                   <span className="stat-value">
-                    {premiumService.calculateTotalPaid(premiumHistory).toLocaleString()} €
+                    {currencyService.formatXAF(premiumService.calculateTotalPaid(premiumHistory))}
                   </span>
                 </div>
                 <div className="stat-item">

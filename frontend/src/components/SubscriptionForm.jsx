@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import currencyService from '../services/currencyService';
 
 const SubscriptionForm = ({ product, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -64,13 +65,13 @@ const SubscriptionForm = ({ product, onSubmit, onCancel }) => {
           <strong>Type :</strong> {product.type_assurance}
         </p>
         <p style={{ margin: '5px 0', fontSize: '1.3rem' }}>
-          <strong>Couverture :</strong> {parseFloat(product.montant_couverture_base).toLocaleString()} €
+          <strong>Couverture :</strong> {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}
         </p>
         <p style={{ margin: '5px 0', fontSize: '1.3rem' }}>
-          <strong>Prime {product.frequence_paiement} :</strong> {parseFloat(product.prime_base).toLocaleString()} €
+          <strong>Prime {product.frequence_paiement} :</strong> {currencyService.formatXAF(parseFloat(product.prime_base))}
         </p>
         <p style={{ margin: '5px 0', fontSize: '1.3rem' }}>
-          <strong>Franchise :</strong> {parseFloat(product.franchise_base).toLocaleString()} €
+          <strong>Franchise :</strong> {currencyService.formatXAF(parseFloat(product.franchise_base))}
         </p>
       </div>
 
@@ -186,7 +187,7 @@ const SubscriptionForm = ({ product, onSubmit, onCancel }) => {
         {product.type_assurance === 'Vie' && (
           <div style={{ backgroundColor: '#f5f5f5', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
             <h4 style={{ marginTop: 0, marginBottom: '10px', fontSize: '1.5rem' }}>Informations assurance vie</h4>
-            <label>Capital garanti (€)</label>
+            <label>Capital garanti (XAF)</label>
             <input
               type="number"
               value={bienAssure.capital_garanti || ''}
