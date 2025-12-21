@@ -101,99 +101,113 @@ const CreateProductForm = ({ onSuccess }) => {
 
       <form onSubmit={handleSubmit}>
         {/* Nom du produit */}
-        <label>Nom du produit *</label>
-        <input
-          name="nom_produit"
-          type="text"
-          value={formData.nom_produit}
-          onChange={handleInputChange}
-          placeholder="Ex: Auto Premium"
-          required
-        />
+        <div>
+          <label>Nom du produit *</label>
+          <input
+            name="nom_produit"
+            type="text"
+            value={formData.nom_produit}
+            onChange={handleInputChange}
+            placeholder="Ex: Auto Premium"
+            required
+          />
+        </div>
 
         {/* Type d'assurance */}
-        <label>Type d'assurance *</label>
-        <select
-          name="type_assurance"
-          value={formData.type_assurance}
-          onChange={handleInputChange}
-          required
-        >
-          <option value="">-- Sélectionner --</option>
-          {productService.getTypesAssurance().map(type => (
-            <option key={type.value} value={type.value}>{type.label}</option>
-          ))}
-        </select>
+        <div>
+          <label>Type d'assurance *</label>
+          <select
+            name="type_assurance"
+            value={formData.type_assurance}
+            onChange={handleInputChange}
+            required
+          >
+            <option value="">-- Sélectionner --</option>
+            {productService.getTypesAssurance().map(type => (
+              <option key={type.value} value={type.value}>{type.label}</option>
+            ))}
+          </select>
+        </div>
 
         {/* Description */}
-        <label>Description</label>
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleInputChange}
-          placeholder="Description détaillée du produit..."
-          rows="3"
-          style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ddd' }}
-        />
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label>Description</label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            placeholder="Description détaillée du produit..."
+            rows="3"
+            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ddd' }}
+          />
+        </div>
 
         {/* Montant couverture */}
-        <label>Montant de couverture de base (€) *</label>
-        <input
-          name="montant_couverture_base"
-          type="number"
-          value={formData.montant_couverture_base}
-          onChange={handleInputChange}
-          placeholder="Ex: 50000"
-          required
-        />
+        <div>
+          <label>Montant de couverture de base (XAF) *</label>
+          <input
+            name="montant_couverture_base"
+            type="number"
+            value={formData.montant_couverture_base}
+            onChange={handleInputChange}
+            placeholder="Ex: 50000"
+            required
+          />
+        </div>
 
         {/* Prime */}
-        <label>
-          Prime de base (€) *
-          <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal', marginLeft: '8px' }}>
-            (Montant à payer selon la fréquence)
-          </span>
-        </label>
-        <input
-          name="prime_base"
-          type="number"
-          value={formData.prime_base}
-          onChange={handleInputChange}
-          placeholder="Ex: 150"
-          required
-        />
+        <div>
+          <label>
+            Prime de base (XAF) *
+            <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal', marginLeft: '8px' }}>
+              (Montant à payer selon la fréquence)
+            </span>
+          </label>
+          <input
+            name="prime_base"
+            type="number"
+            value={formData.prime_base}
+            onChange={handleInputChange}
+            placeholder="Ex: 150"
+            required
+          />
+        </div>
 
         {/* Fréquence de paiement */}
-        <label>Fréquence de paiement *</label>
-        <select
-          name="frequence_paiement"
-          value={formData.frequence_paiement}
-          onChange={handleInputChange}
-          required
-        >
-          {productService.getFrequencesPaiement().map(freq => (
-            <option key={freq.value} value={freq.value}>{freq.label}</option>
-          ))}
-        </select>
+        <div>
+          <label>Fréquence de paiement *</label>
+          <select
+            name="frequence_paiement"
+            value={formData.frequence_paiement}
+            onChange={handleInputChange}
+            required
+          >
+            {productService.getFrequencesPaiement().map(freq => (
+              <option key={freq.value} value={freq.value}>{freq.label}</option>
+            ))}
+          </select>
+        </div>
 
         {/* Franchise */}
-        <label>
-          Franchise de base (€)
-          <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal', marginLeft: '8px' }}>
-            (Montant restant à charge en cas de sinistre)
-          </span>
-        </label>
-        <input
-          name="franchise_base"
-          type="number"
-          value={formData.franchise_base}
-          onChange={handleInputChange}
-          placeholder="Ex: 500"
-        />
+        <div>
+          <label>
+            Franchise de base (XAF)
+            <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal', marginLeft: '8px' }}>
+              (Montant restant à charge en cas de sinistre)
+            </span>
+          </label>
+          <input
+            name="franchise_base"
+            type="number"
+            value={formData.franchise_base}
+            onChange={handleInputChange}
+            placeholder="Ex: 500"
+          />
+        </div>
 
         {/* Garanties */}
         {garanties.length > 0 && (
-          <div style={{ marginTop: '20px' }}>
+          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
             <label>Garanties incluses</label>
             {garanties.map((garantie, index) => (
               <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
@@ -212,7 +226,7 @@ const CreateProductForm = ({ onSuccess }) => {
           </div>
         )}
 
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={loading} style={{ gridColumn: '1 / -1' }}>
           {loading ? 'Création en cours...' : 'Créer le produit'}
         </button>
       </form>

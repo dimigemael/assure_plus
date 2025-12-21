@@ -364,6 +364,9 @@ class SmartContractService {
   }
 }
 
-// Export singleton
+// Export de la classe pour créer des instances
+export { SmartContractService };
+
+// Export singleton par défaut
 const smartContractService = new SmartContractService();
 export default smartContractService;

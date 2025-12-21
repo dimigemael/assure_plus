@@ -152,9 +152,7 @@ export default function AdminDashboard() {
         {/* --- PAGE CONTENT --- */}
 
         {activePage === "create" && (
-          <div className="card_container">
-            <CreateProductForm onSuccess={handleProductCreated} />
-          </div>
+          <CreateProductForm onSuccess={handleProductCreated} />
         )}
 
         {activePage === "products" && (

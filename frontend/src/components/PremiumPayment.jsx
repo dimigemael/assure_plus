@@ -4,7 +4,7 @@ import subscriptionService from '../services/subscriptionService';
 import premiumService from '../services/premiumService';
 import currencyService from '../services/currencyService';
 import useMetaMask from '../hooks/useMetaMask';
-import SmartContractService from '../services/smartContractService';
+import { SmartContractService } from '../services/smartContractService';
 import { useToast } from './ToastContainer';
 import './PremiumPayment.css';
 

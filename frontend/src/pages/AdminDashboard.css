@@ -113,6 +113,7 @@ html{
   align-items: stretch;
   justify-content: center;
   width: 100%;
+  max-width: 100%;
 }
 
 .card {
@@ -184,6 +185,41 @@ html{
 
 .card button:hover {
   background: #4D901D;
+}
+
+/* --- FORMULAIRE EN GRILLE --- */
+.card form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(30rem, 1fr));
+  gap: 2rem;
+  width: 100%;
+}
+
+/* Groupes de champs (label + input) */
+.card form > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Les labels dans les divs */
+.card form > div > label {
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+  display: block;
+  color: var(--TextColor);
+}
+
+/* Les inputs et selects dans les divs */
+.card form > div > input,
+.card form > div > select,
+.card form > div > textarea {
+  width: 100%;
+  padding: 1.2rem 1.5rem;
+  border: 0.1rem solid var(--StrokeGrey);
+  border-radius: 0.6rem;
+  color: var(--SetColor);
+  font-size: 1.4rem;
 }
 
 /* --- TABLE --- */
