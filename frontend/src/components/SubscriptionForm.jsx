@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import currencyService from '../services/currencyService';
+import useMetaMask from '../hooks/useMetaMask';
 
 const SubscriptionForm = ({ product, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -8,9 +9,11 @@ const SubscriptionForm = ({ product, onSubmit, onCancel }) => {
     date_fin: '',
     beneficiaire_nom: '',
     beneficiaire_relation: '',
+    wallet_paiement: '',
   });
 
   const [bienAssure, setBienAssure] = useState({});
+  const { account, connect, isConnected, isMetaMaskInstalled } = useMetaMask();
 
   // Initialiser les champs du bien assuré selon le type d'assurance
   const initializeBienAssure = (typeAssurance) => {
@@ -34,6 +37,13 @@ const SubscriptionForm = ({ product, onSubmit, onCancel }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.type_assurance]);
 
+  // Mettre à jour wallet_paiement quand le compte MetaMask change
+  useEffect(() => {
+    if (account) {
+      setFormData(prev => ({ ...prev, wallet_paiement: account }));
+    }
+  }, [account]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -46,6 +56,12 @@ const SubscriptionForm = ({ product, onSubmit, onCancel }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Vérifier que l'adresse wallet est présente
+    if (!formData.wallet_paiement) {
+      alert('Veuillez connecter votre wallet MetaMask pour continuer');
+      return;
+    }
+
     const subscriptionData = {
       insurance_product_id: product.id,
       ...formData,
@@ -53,6 +69,15 @@ const SubscriptionForm = ({ product, onSubmit, onCancel }) => {
     };
 
     onSubmit(subscriptionData);
+  };
+
+  const handleConnectWallet = async () => {
+    try {
+      await connect();
+    } catch (error) {
+      console.error('Erreur connexion MetaMask:', error);
+      alert('Erreur lors de la connexion à MetaMask');
+    }
   };
 
   return (
@@ -73,6 +98,65 @@ const SubscriptionForm = ({ product, onSubmit, onCancel }) => {
         <p style={{ margin: '5px 0', fontSize: '1.3rem' }}>
           <strong>Franchise :</strong> {currencyService.formatXAF(parseFloat(product.franchise_base))}
         </p>
+      </div>
+
+      {/* Section connexion MetaMask */}
+      <div style={{
+        backgroundColor: isConnected ? '#e8f5e9' : '#fff3e0',
+        padding: '15px',
+        borderRadius: '8px',
+        marginBottom: '20px',
+        border: `2px solid ${isConnected ? '#4caf50' : '#ff9800'}`
+      }}>
+        <h4 style={{ marginTop: 0, marginBottom: '10px', fontSize: '1.5rem' }}>
+          Wallet Blockchain (Obligatoire)
+        </h4>
+        {!isMetaMaskInstalled ? (
+          <div style={{ color: '#d32f2f' }}>
+            <p style={{ margin: '5px 0', fontSize: '1.3rem' }}>
+              MetaMask n'est pas installé. Veuillez l'installer pour continuer.
+            </p>
+            <a
+              href="https://metamask.io/download/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#1976d2', textDecoration: 'underline' }}
+            >
+              Télécharger MetaMask
+            </a>
+          </div>
+        ) : !isConnected ? (
+          <div>
+            <p style={{ margin: '5px 0 10px 0', fontSize: '1.3rem' }}>
+              Connectez votre wallet MetaMask pour enregistrer votre souscription sur la blockchain.
+            </p>
+            <button
+              type="button"
+              onClick={handleConnectWallet}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#ff9800',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '1.4rem',
+                fontWeight: 'bold'
+              }}
+            >
+              Connecter MetaMask
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p style={{ margin: '5px 0', fontSize: '1.3rem' }}>
+              <strong>Wallet connecté :</strong> {account}
+            </p>
+            <p style={{ margin: '5px 0', fontSize: '1.2rem', color: '#2e7d32' }}>
+              ✓ Votre souscription sera enregistrée sur la blockchain avec cette adresse
+            </p>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit}>

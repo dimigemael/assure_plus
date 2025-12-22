@@ -5,12 +5,21 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Models\InsuranceProduct;
+use App\Services\InsuranceBlockchainService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SubscriptionController extends Controller
 {
+    private InsuranceBlockchainService $blockchainService;
+
+    public function __construct(InsuranceBlockchainService $blockchainService)
+    {
+        $this->blockchainService = $blockchainService;
+    }
+
     /**
      * Créer une nouvelle demande de souscription
      */
@@ -23,6 +32,7 @@ class SubscriptionController extends Controller
             'bien_assure' => 'nullable|array',
             'beneficiaire_nom' => 'nullable|string|max:100',
             'beneficiaire_relation' => 'nullable|string|max:100',
+            'wallet_paiement' => 'required|string|regex:/^0x[a-fA-F0-9]{40}$/',
         ]);
 
         if ($validator->fails()) {
@@ -58,6 +68,7 @@ class SubscriptionController extends Controller
                 'bien_assure' => $request->bien_assure,
                 'beneficiaire_nom' => $request->beneficiaire_nom,
                 'beneficiaire_relation' => $request->beneficiaire_relation,
+                'wallet_paiement' => $request->wallet_paiement,
                 'status' => 'brouillon', // En attente de validation admin
             ]);
 
@@ -115,9 +126,57 @@ class SubscriptionController extends Controller
                 ], 400);
             }
 
-            $contract->update([
-                'status' => 'actif',
-            ]);
+            // Vérifier que l'adresse wallet est présente
+            if (!$contract->wallet_paiement) {
+                return response()->json([
+                    'message' => 'Impossible de créer la police sur la blockchain: adresse wallet manquante'
+                ], 400);
+            }
+
+            // Créer la police sur la blockchain
+            try {
+                Log::info('Création de la police sur la blockchain', [
+                    'contract_id' => $contract->id,
+                    'wallet' => $contract->wallet_paiement
+                ]);
+
+                $blockchainResult = $this->blockchainService->createPolicy(
+                    $contract,
+                    $contract->wallet_paiement
+                );
+
+                // Mettre à jour le contrat avec les informations blockchain
+                $contract->update([
+                    'status' => 'actif',
+                    'blockchain_policy_id' => $blockchainResult['policyId'],
+                    'transaction_hash' => $blockchainResult['txHash'],
+                    'smart_contract_address' => $this->blockchainService->getContractAddress(),
+                ]);
+
+                Log::info('Police créée sur la blockchain avec succès', [
+                    'contract_id' => $contract->id,
+                    'blockchain_policy_id' => $blockchainResult['policyId'],
+                    'tx_hash' => $blockchainResult['txHash']
+                ]);
+
+            } catch (\Exception $e) {
+                Log::error('Erreur lors de la création de la police sur la blockchain', [
+                    'contract_id' => $contract->id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+
+                // On marque quand même le contrat comme actif mais sans blockchain_policy_id
+                $contract->update([
+                    'status' => 'actif',
+                ]);
+
+                return response()->json([
+                    'message' => 'Souscription approuvée mais échec de l\'enregistrement blockchain',
+                    'contract' => $contract,
+                    'blockchain_error' => $e->getMessage()
+                ], 200);
+            }
 
             // Incrémenter le compteur de souscriptions du produit
             if ($contract->insuranceProduct) {
@@ -125,11 +184,21 @@ class SubscriptionController extends Controller
             }
 
             return response()->json([
-                'message' => 'Souscription approuvée avec succès',
-                'contract' => $contract
+                'message' => 'Souscription approuvée et enregistrée sur la blockchain avec succès',
+                'contract' => $contract,
+                'blockchain' => [
+                    'policy_id' => $blockchainResult['policyId'],
+                    'transaction_hash' => $blockchainResult['txHash'],
+                    'contract_address' => $this->blockchainService->getContractAddress()
+                ]
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'approbation', [
+                'contract_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'message' => 'Erreur lors de l\'approbation',
                 'error' => $e->getMessage()

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastContainer';
 import productService from '../services/productService';
 import subscriptionService from '../services/subscriptionService';
+import currencyService from '../services/currencyService';
 import CreateProductForm from '../components/CreateProductForm';
 
 export default function AdminDashboard() {
@@ -185,8 +186,12 @@ export default function AdminDashboard() {
                     <tr key={product.id} style={{ borderBottom: '1px solid #ddd' }}>
                       <td style={{ padding: '12px' }}>{product.nom_produit}</td>
                       <td style={{ padding: '12px' }}>{product.type_assurance}</td>
-                      <td style={{ padding: '12px', textAlign: 'right' }}>{product.montant_couverture_base} €</td>
-                      <td style={{ padding: '12px', textAlign: 'right' }}>{product.prime_base} €</td>
+                      <td style={{ padding: '12px', textAlign: 'right' }}>
+                        {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right' }}>
+                        {currencyService.formatXAF(parseFloat(product.prime_base))}
+                      </td>
                       <td style={{ padding: '12px', textAlign: 'center', textTransform: 'capitalize' }}>
                         {product.frequence_paiement}
                       </td>
@@ -256,7 +261,7 @@ export default function AdminDashboard() {
                         </td>
                         <td style={{ padding: '12px' }}>{subscription.type_assurance}</td>
                         <td style={{ padding: '12px', textAlign: 'right' }}>
-                          {parseFloat(subscription.montant_couverture).toLocaleString()} €
+                          {currencyService.formatXAF(parseFloat(subscription.montant_couverture))}
                         </td>
                         <td style={{ padding: '12px', textAlign: 'center' }}>
                           {new Date(subscription.date_debut).toLocaleDateString()}

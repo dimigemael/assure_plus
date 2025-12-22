@@ -53,9 +53,13 @@ class IPFSService
                     file_get_contents($file->getRealPath()),
                     $file->getClientOriginalName()
                 )
-                ->post("{$this->baseUrl}/add", [
-                    'pin' => 'true', // Pin le fichier pour qu'il soit persisté
-                ]);
+                ->post("{$this->baseUrl}/add?pin=true");
+
+            Log::info('IPFS Upload response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'successful' => $response->successful(),
+            ]);
 
             if (!$response->successful()) {
                 Log::error('IPFS Upload failed', [
@@ -66,6 +70,14 @@ class IPFSService
             }
 
             $result = $response->json();
+
+            if (!$result || !isset($result['Hash'])) {
+                Log::error('IPFS Upload response invalid', [
+                    'result' => $result,
+                    'body' => $response->body(),
+                ]);
+                throw new Exception('Réponse IPFS invalide: ' . $response->body());
+            }
 
             Log::info('IPFS Upload successful', [
                 'hash' => $result['Hash'],
@@ -172,7 +184,7 @@ class IPFSService
     public function isAvailable(): bool
     {
         try {
-            $response = Http::timeout(5)->get("{$this->baseUrl}/version");
+            $response = Http::timeout(5)->post("{$this->baseUrl}/version");
             return $response->successful();
         } catch (Exception $e) {
             Log::warning('IPFS not available', ['error' => $e->getMessage()]);
@@ -188,7 +200,7 @@ class IPFSService
     public function getVersion(): ?array
     {
         try {
-            $response = Http::timeout(5)->get("{$this->baseUrl}/version");
+            $response = Http::timeout(5)->post("{$this->baseUrl}/version");
 
             if ($response->successful()) {
                 return $response->json();

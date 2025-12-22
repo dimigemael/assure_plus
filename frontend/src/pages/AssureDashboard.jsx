@@ -22,6 +22,7 @@ export default function AssureDashboard() {
   // États pour les produits disponibles et les contrats actifs
   const [products, setProducts] = useState([]);
   const [myContracts, setMyContracts] = useState([]);
+  const [allMySubscriptions, setAllMySubscriptions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Charger les produits disponibles et les contrats actifs au montage
@@ -46,6 +47,8 @@ export default function AssureDashboard() {
   const loadMyContracts = async () => {
     try {
       const data = await subscriptionService.getMySubscriptions();
+      // Stocker toutes les souscriptions pour vérifier les statuts
+      setAllMySubscriptions(data);
       // Filtrer uniquement les contrats actifs
       const activeContracts = data.filter(contract => contract.status === 'actif');
       setMyContracts(activeContracts);
@@ -68,6 +71,8 @@ export default function AssureDashboard() {
       showSuccessToast('Demande de souscription envoyée avec succès ! Elle sera validée par un administrateur.', 5000);
       setShowSubscriptionForm(false);
       setSelectedProduct(null);
+      // Recharger les souscriptions pour mettre à jour le statut
+      await loadMyContracts();
     } catch (err) {
       showErrorToast(typeof err === 'string' ? err : 'Erreur lors de la souscription');
     } finally {
@@ -205,40 +210,85 @@ export default function AssureDashboard() {
                 </p>
               </div>
             ) : (
-              products.map((product, index) => (
-                <div key={index} className="card">
-                  <h3>{product.nom_produit}</h3>
-                  <hr className="title-line" />
+              products.map((product, index) => {
+                // Vérifier si l'utilisateur a déjà souscrit à ce produit
+                const existingSubscription = allMySubscriptions.find(
+                  sub => sub.insurance_product_id === product.id
+                );
 
-                  <p><strong>Type :</strong> {product.type_assurance}</p>
-                  <p><strong>Description :</strong> {product.description || 'Non spécifiée'}</p>
-                  <p><strong>Montant couverture :</strong> {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}</p>
-                  <p><strong>Prime {product.frequence_paiement} :</strong> {currencyService.formatXAF(parseFloat(product.prime_base))}</p>
-                  <p><strong>Franchise :</strong> {currencyService.formatXAF(parseFloat(product.franchise_base))}</p>
+                return (
+                  <div key={index} className="card">
+                    <h3>{product.nom_produit}</h3>
+                    <hr className="title-line" />
 
-                  {product.garanties_incluses && product.garanties_incluses.length > 0 && (
-                    <div style={{ marginTop: '15px', fontSize: '1.3rem' }}>
-                      <strong>Garanties incluses :</strong>
-                      <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-                        {product.garanties_incluses.map((garantie, idx) => (
-                          <li key={idx}>
-                            {garantie.nom} {garantie.obligatoire && <strong>(Obligatoire)</strong>}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                    <p><strong>Type :</strong> {product.type_assurance}</p>
+                    <p><strong>Description :</strong> {product.description || 'Non spécifiée'}</p>
+                    <p><strong>Montant couverture :</strong> {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}</p>
+                    <p><strong>Prime {product.frequence_paiement} :</strong> {currencyService.formatXAF(parseFloat(product.prime_base))}</p>
+                    <p><strong>Franchise :</strong> {currencyService.formatXAF(parseFloat(product.franchise_base))}</p>
 
-                  <button
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      setShowSubscriptionForm(true);
-                    }}
-                  >
-                    Souscrire
-                  </button>
-                </div>
-              ))
+                    {product.garanties_incluses && product.garanties_incluses.length > 0 && (
+                      <div style={{ marginTop: '15px', fontSize: '1.3rem' }}>
+                        <strong>Garanties incluses :</strong>
+                        <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+                          {product.garanties_incluses.map((garantie, idx) => (
+                            <li key={idx}>
+                              {garantie.nom} {garantie.obligatoire && <strong>(Obligatoire)</strong>}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {existingSubscription ? (
+                      // Afficher le statut si déjà souscrit
+                      <div style={{
+                        marginTop: '15px',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        backgroundColor:
+                          existingSubscription.status === 'actif' ? '#e8f5e9' :
+                          existingSubscription.status === 'brouillon' ? '#fff3e0' :
+                          existingSubscription.status === 'resilie' ? '#ffebee' : '#f5f5f5',
+                        color:
+                          existingSubscription.status === 'actif' ? '#2e7d32' :
+                          existingSubscription.status === 'brouillon' ? '#f57c00' :
+                          existingSubscription.status === 'resilie' ? '#c62828' : '#666'
+                      }}>
+                        <strong style={{ fontSize: '1.4rem' }}>
+                          {existingSubscription.status === 'actif' && '✓ Souscription active'}
+                          {existingSubscription.status === 'brouillon' && '⏳ En attente de validation'}
+                          {existingSubscription.status === 'resilie' && '✗ Souscription résiliée'}
+                          {!['actif', 'brouillon', 'resilie'].includes(existingSubscription.status) &&
+                            `Statut: ${existingSubscription.status}`
+                          }
+                        </strong>
+                        {existingSubscription.status === 'brouillon' && (
+                          <p style={{ margin: '5px 0 0 0', fontSize: '1.2rem' }}>
+                            Votre demande est en cours de traitement par un administrateur
+                          </p>
+                        )}
+                        {existingSubscription.status === 'actif' && (
+                          <p style={{ margin: '5px 0 0 0', fontSize: '1.2rem' }}>
+                            N° Police: {existingSubscription.numero_police}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      // Afficher le bouton souscrire si pas encore souscrit
+                      <button
+                        onClick={() => {
+                          setSelectedProduct(product);
+                          setShowSubscriptionForm(true);
+                        }}
+                      >
+                        Souscrire
+                      </button>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         )}
