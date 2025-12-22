@@ -7,6 +7,7 @@ import productService from '../services/productService';
 import subscriptionService from '../services/subscriptionService';
 import currencyService from '../services/currencyService';
 import claimService from '../services/claimService';
+import premiumService from '../services/premiumService';
 import SubscriptionForm from '../components/SubscriptionForm';
 import PremiumPayment from '../components/PremiumPayment';
 
@@ -22,6 +23,8 @@ export default function AssureDashboard() {
   // États pour les produits disponibles et les contrats actifs
   const [products, setProducts] = useState([]);
   const [myContracts, setMyContracts] = useState([]);
+  const [allMySubscriptions, setAllMySubscriptions] = useState([]);
+  const [premiumHistory, setPremiumHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Charger les produits disponibles et les contrats actifs au montage
@@ -46,11 +49,31 @@ export default function AssureDashboard() {
   const loadMyContracts = async () => {
     try {
       const data = await subscriptionService.getMySubscriptions();
+      // Stocker toutes les souscriptions pour vérifier les statuts
+      setAllMySubscriptions(data);
       // Filtrer uniquement les contrats actifs
       const activeContracts = data.filter(contract => contract.status === 'actif');
       setMyContracts(activeContracts);
     } catch (err) {
       console.error('Erreur chargement contrats:', err);
+    }
+  };
+
+  const loadPremiumHistory = async () => {
+    setLoading(true);
+    try {
+      const response = await premiumService.list();
+
+      // L'API retourne { success: true, data: { data: [...], current_page, ... } }
+      // On doit extraire data.data pour obtenir le tableau des paiements
+      const payments = response?.data?.data || [];
+
+      setPremiumHistory(payments);
+    } catch (err) {
+      console.error('Erreur chargement historique paiements:', err);
+      showErrorToast('Erreur lors du chargement de l\'historique des paiements');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,6 +91,8 @@ export default function AssureDashboard() {
       showSuccessToast('Demande de souscription envoyée avec succès ! Elle sera validée par un administrateur.', 5000);
       setShowSubscriptionForm(false);
       setSelectedProduct(null);
+      // Recharger les souscriptions pour mettre à jour le statut
+      await loadMyContracts();
     } catch (err) {
       showErrorToast(typeof err === 'string' ? err : 'Erreur lors de la souscription');
     } finally {
@@ -205,40 +230,85 @@ export default function AssureDashboard() {
                 </p>
               </div>
             ) : (
-              products.map((product, index) => (
-                <div key={index} className="card">
-                  <h3>{product.nom_produit}</h3>
-                  <hr className="title-line" />
+              products.map((product, index) => {
+                // Vérifier si l'utilisateur a déjà souscrit à ce produit
+                const existingSubscription = allMySubscriptions.find(
+                  sub => sub.insurance_product_id === product.id
+                );
 
-                  <p><strong>Type :</strong> {product.type_assurance}</p>
-                  <p><strong>Description :</strong> {product.description || 'Non spécifiée'}</p>
-                  <p><strong>Montant couverture :</strong> {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}</p>
-                  <p><strong>Prime {product.frequence_paiement} :</strong> {currencyService.formatXAF(parseFloat(product.prime_base))}</p>
-                  <p><strong>Franchise :</strong> {currencyService.formatXAF(parseFloat(product.franchise_base))}</p>
+                return (
+                  <div key={index} className="card">
+                    <h3>{product.nom_produit}</h3>
+                    <hr className="title-line" />
 
-                  {product.garanties_incluses && product.garanties_incluses.length > 0 && (
-                    <div style={{ marginTop: '15px', fontSize: '1.3rem' }}>
-                      <strong>Garanties incluses :</strong>
-                      <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-                        {product.garanties_incluses.map((garantie, idx) => (
-                          <li key={idx}>
-                            {garantie.nom} {garantie.obligatoire && <strong>(Obligatoire)</strong>}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                    <p><strong>Type :</strong> {product.type_assurance}</p>
+                    <p><strong>Description :</strong> {product.description || 'Non spécifiée'}</p>
+                    <p><strong>Montant couverture :</strong> {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}</p>
+                    <p><strong>Prime {product.frequence_paiement} :</strong> {currencyService.formatXAF(parseFloat(product.prime_base))}</p>
+                    <p><strong>Franchise :</strong> {currencyService.formatXAF(parseFloat(product.franchise_base))}</p>
 
-                  <button
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      setShowSubscriptionForm(true);
-                    }}
-                  >
-                    Souscrire
-                  </button>
-                </div>
-              ))
+                    {product.garanties_incluses && product.garanties_incluses.length > 0 && (
+                      <div style={{ marginTop: '15px', fontSize: '1.3rem' }}>
+                        <strong>Garanties incluses :</strong>
+                        <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+                          {product.garanties_incluses.map((garantie, idx) => (
+                            <li key={idx}>
+                              {garantie.nom} {garantie.obligatoire && <strong>(Obligatoire)</strong>}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {existingSubscription ? (
+                      // Afficher le statut si déjà souscrit
+                      <div style={{
+                        marginTop: '15px',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        backgroundColor:
+                          existingSubscription.status === 'actif' ? '#e8f5e9' :
+                          existingSubscription.status === 'brouillon' ? '#fff3e0' :
+                          existingSubscription.status === 'resilie' ? '#ffebee' : '#f5f5f5',
+                        color:
+                          existingSubscription.status === 'actif' ? '#2e7d32' :
+                          existingSubscription.status === 'brouillon' ? '#f57c00' :
+                          existingSubscription.status === 'resilie' ? '#c62828' : '#666'
+                      }}>
+                        <strong style={{ fontSize: '1.4rem' }}>
+                          {existingSubscription.status === 'actif' && '✓ Souscription active'}
+                          {existingSubscription.status === 'brouillon' && '⏳ En attente de validation'}
+                          {existingSubscription.status === 'resilie' && '✗ Souscription résiliée'}
+                          {!['actif', 'brouillon', 'resilie'].includes(existingSubscription.status) &&
+                            `Statut: ${existingSubscription.status}`
+                          }
+                        </strong>
+                        {existingSubscription.status === 'brouillon' && (
+                          <p style={{ margin: '5px 0 0 0', fontSize: '1.2rem' }}>
+                            Votre demande est en cours de traitement par un administrateur
+                          </p>
+                        )}
+                        {existingSubscription.status === 'actif' && (
+                          <p style={{ margin: '5px 0 0 0', fontSize: '1.2rem' }}>
+                            N° Police: {existingSubscription.numero_police}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      // Afficher le bouton souscrire si pas encore souscrit
+                      <button
+                        onClick={() => {
+                          setSelectedProduct(product);
+                          setShowSubscriptionForm(true);
+                        }}
+                      >
+                        Souscrire
+                      </button>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         )}
@@ -365,8 +435,161 @@ export default function AssureDashboard() {
         )}
 
         {activePage === "list" && (
-          <div className="card">
-            <h3>Historique des  contrats et transactions</h3>
+          <div>
+            <h3 style={{ marginBottom: '20px' }}>Historique des contrats et transactions</h3>
+
+            {/* Section Contrats */}
+            <div className="card" style={{ marginBottom: '30px' }}>
+              <h4 style={{ fontSize: '1.8rem', marginBottom: '15px' }}>Mes Contrats</h4>
+              <hr className="title-line" />
+
+              {loading ? (
+                <p style={{ textAlign: 'center', padding: '20px' }}>Chargement...</p>
+              ) : allMySubscriptions.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                  Aucun contrat pour le moment
+                </p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1.3rem' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
+                        <th style={{ padding: '12px', textAlign: 'left' }}>N° Police</th>
+                        <th style={{ padding: '12px', textAlign: 'left' }}>Type</th>
+                        <th style={{ padding: '12px', textAlign: 'right' }}>Couverture</th>
+                        <th style={{ padding: '12px', textAlign: 'right' }}>Prime</th>
+                        <th style={{ padding: '12px', textAlign: 'center' }}>Début</th>
+                        <th style={{ padding: '12px', textAlign: 'center' }}>Fin</th>
+                        <th style={{ padding: '12px', textAlign: 'center' }}>Statut</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allMySubscriptions.map((contract, index) => (
+                        <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
+                          <td style={{ padding: '12px' }}>{contract.numero_police || 'N/A'}</td>
+                          <td style={{ padding: '12px' }}>{contract.type_assurance}</td>
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                            {currencyService.formatXAF(parseFloat(contract.montant_couverture))}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                            {currencyService.formatXAF(parseFloat(contract.prime))}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>
+                            {new Date(contract.date_debut).toLocaleDateString('fr-FR')}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>
+                            {new Date(contract.date_fin).toLocaleDateString('fr-FR')}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>
+                            <span style={{
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '1.2rem',
+                              backgroundColor:
+                                contract.status === 'actif' ? '#e8f5e9' :
+                                contract.status === 'brouillon' ? '#fff3e0' :
+                                contract.status === 'resilie' ? '#ffebee' : '#f5f5f5',
+                              color:
+                                contract.status === 'actif' ? '#2e7d32' :
+                                contract.status === 'brouillon' ? '#f57c00' :
+                                contract.status === 'resilie' ? '#c62828' : '#666'
+                            }}>
+                              {contract.status === 'actif' && 'Actif'}
+                              {contract.status === 'brouillon' && 'En attente'}
+                              {contract.status === 'resilie' && 'Résilié'}
+                              {!['actif', 'brouillon', 'resilie'].includes(contract.status) && contract.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Section Transactions (Paiements de Primes) */}
+            <div className="card">
+              <h4 style={{ fontSize: '1.8rem', marginBottom: '15px' }}>Historique des Paiements</h4>
+              <hr className="title-line" />
+
+              <button
+                onClick={loadPremiumHistory}
+                style={{
+                  marginBottom: '15px',
+                  padding: '8px 16px',
+                  backgroundColor: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '1.3rem'
+                }}
+              >
+                Charger l'historique
+              </button>
+
+              {loading ? (
+                <p style={{ textAlign: 'center', padding: '20px' }}>Chargement...</p>
+              ) : premiumHistory.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                  Aucun paiement enregistré
+                </p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1.3rem' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
+                        <th style={{ padding: '12px', textAlign: 'left' }}>N° Police</th>
+                        <th style={{ padding: '12px', textAlign: 'right' }}>Montant</th>
+                        <th style={{ padding: '12px', textAlign: 'center' }}>Date</th>
+                        <th style={{ padding: '12px', textAlign: 'left' }}>Méthode</th>
+                        <th style={{ padding: '12px', textAlign: 'center' }}>Statut</th>
+                        <th style={{ padding: '12px', textAlign: 'left' }}>Transaction Hash</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {premiumHistory.map((payment, index) => (
+                        <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
+                          <td style={{ padding: '12px' }}>
+                            {payment.contract?.numero_police || 'N/A'}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>
+                            {currencyService.formatXAF(parseFloat(payment.montant))}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>
+                            {new Date(payment.date_paiement).toLocaleDateString('fr-FR')}
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            {payment.methode_paiement || 'N/A'}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>
+                            <span style={{
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '1.2rem',
+                              backgroundColor: payment.statut === 'paye' ? '#e8f5e9' : '#fff3e0',
+                              color: payment.statut === 'paye' ? '#2e7d32' : '#f57c00'
+                            }}>
+                              {payment.statut === 'paye' ? 'Payé' : payment.statut}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px', fontSize: '1.1rem', color: '#666' }}>
+                            {payment.transaction_hash ? (
+                              <span title={payment.transaction_hash}>
+                                {payment.transaction_hash.substring(0, 10)}...
+                              </span>
+                            ) : (
+                              'N/A'
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

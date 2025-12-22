@@ -23,8 +23,7 @@ class StoreClaimRequest extends FormRequest
             'contract_id' => 'required|exists:contracts,id',
             'description' => 'required|string|max:1000',
             'montant_reclame' => 'required|numeric|min:0',
-            // On peut même personnaliser les règles pour le fichier
-            'proof_file' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5000',
+            'proof_file' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10000',
         ];
     }
     
@@ -35,7 +34,7 @@ class StoreClaimRequest extends FormRequest
     {
         return [
             'proof_file.required' => 'La preuve (fichier) est obligatoire.',
-            'proof_file.max' => 'Le fichier est trop lourd (Max 5Mo).',
+            'proof_file.max' => 'Le fichier est trop lourd (Max 10Mo).',
             'contract_id.exists' => 'Ce contrat n\'existe pas.'
         ];
     }

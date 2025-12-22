@@ -18,21 +18,51 @@ class SmartContractService {
    * @param {object} signer - Ethers signer (depuis MetaMask)
    */
   async initialize(signer) {
+    console.log('=== SmartContractService.initialize ===');
+    console.log('Contract Address:', this.contractAddress);
+    console.log('Signer provided:', signer);
+    console.log('Signer type:', typeof signer);
+
     if (!this.contractAddress) {
       throw new Error('Adresse du contrat non configurée. Vérifiez VITE_CONTRACT_ADDRESS dans .env');
     }
 
-    this.signer = signer;
-    this.provider = signer.provider;
+    if (!signer) {
+      throw new Error('Signer non fourni');
+    }
 
-    // Créer l'instance du contrat avec l'ABI
-    this.contract = new ethers.Contract(
-      this.contractAddress,
-      contractABI.abi,
-      signer
-    );
+    try {
+      this.signer = signer;
+      this.provider = signer.provider;
 
-    return this.contract;
+      console.log('Provider:', this.provider);
+      console.log('Contract ABI loaded:', !!contractABI.abi);
+      console.log('ABI functions:', contractABI.abi.filter(item => item.type === 'function').map(f => f.name));
+
+      // Créer l'instance du contrat avec l'ABI
+      this.contract = new ethers.Contract(
+        this.contractAddress,
+        contractABI.abi,
+        signer
+      );
+
+      console.log('Contract instance created:', this.contract);
+      console.log('Contract target:', this.contract.target);
+      console.log('Contract runner:', this.contract.runner);
+
+      // Vérifier que le contrat a la méthode payPremium
+      if (typeof this.contract.payPremium !== 'function') {
+        throw new Error('La méthode payPremium n\'existe pas sur le contrat');
+      }
+
+      console.log('payPremium method exists:', typeof this.contract.payPremium);
+
+      return this.contract;
+    } catch (error) {
+      console.error('=== ERROR in initialize ===');
+      console.error('Error:', error);
+      throw error;
+    }
   }
 
   /**
@@ -215,21 +245,45 @@ class SmartContractService {
    * @returns {Promise<object>}
    */
   async payPremium(policyId, amountEth) {
+    console.log('=== SmartContractService.payPremium ===');
+    console.log('policyId:', policyId, 'type:', typeof policyId);
+    console.log('amountEth:', amountEth, 'type:', typeof amountEth);
+    console.log('contract:', this.contract);
+    console.log('contract address:', this.contractAddress);
+    console.log('signer:', this.signer);
+
     if (!this.contract) {
       throw new Error('Contrat non initialisé');
     }
 
-    const tx = await this.contract.payPremium(policyId, {
-      value: ethers.parseEther(amountEth.toString()),
-    });
+    try {
+      // Convertir le montant en Wei
+      const valueInWei = ethers.parseEther(amountEth.toString());
+      console.log('Value in Wei:', valueInWei.toString());
 
-    const receipt = await tx.wait();
+      console.log('Calling contract.payPremium...');
+      const tx = await this.contract.payPremium(policyId, {
+        value: valueInWei,
+      });
 
-    return {
-      transactionHash: receipt.hash,
-      blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed.toString(),
-    };
+      console.log('Transaction sent:', tx.hash);
+      console.log('Waiting for confirmation...');
+
+      const receipt = await tx.wait();
+      console.log('Transaction confirmed:', receipt);
+
+      return {
+        transactionHash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString(),
+      };
+    } catch (error) {
+      console.error('=== ERROR in payPremium ===');
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      console.error('Full error:', error);
+      throw error;
+    }
   }
 
   /**

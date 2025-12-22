@@ -132,9 +132,36 @@ export default function ExpertDashboard() {
                         <div className="proofs-container">
                           <span className="proof-item">{sinistre.proof_file}</span>
                           {sinistre.ipfs_hash && (
-                            <span className="proof-item" style={{ fontSize: '1.1rem', color: '#666' }}>
-                              IPFS: {sinistre.ipfs_hash.substring(0, 10)}...
-                            </span>
+                            <>
+                              <span className="proof-item" style={{ fontSize: '1.1rem', color: '#666' }}>
+                                IPFS: {sinistre.ipfs_hash.substring(0, 10)}...
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  window.open(`http://localhost:8081/ipfs/${sinistre.ipfs_hash}`, '_blank', 'noopener,noreferrer');
+                                }}
+                                className="proof-view-button"
+                                style={{
+                                  display: 'inline-block',
+                                  marginTop: '10px',
+                                  padding: '8px 16px',
+                                  backgroundColor: '#2196F3 !important',
+                                  color: 'white !important',
+                                  textDecoration: 'none',
+                                  borderRadius: '4px',
+                                  fontSize: '1.2rem',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  flex: 'none',
+                                  width: 'auto'
+                                }}
+                              >
+                                📄 Voir la preuve
+                              </button>
+                            </>
                           )}
                         </div>
                       </>

@@ -26,9 +26,9 @@ class InsuranceBlockchainService
     public function createPolicy(Contract $contract, string $userAddress): array
     {
         try {
-            // Convertir les montants en Wei
-            $coverageAmountWei = $this->web3->etherToWei($contract->montant_couverture);
-            $premiumWei = $this->web3->etherToWei($contract->prime);
+            // Convertir les montants XAF en Wei (via conversion XAF → ETH → Wei)
+            $coverageAmountWei = $this->web3->xafToWei($contract->montant_couverture);
+            $premiumWei = $this->web3->xafToWei($contract->prime);
 
             // Calculer la durée en secondes
             $startDate = strtotime($contract->date_debut);
@@ -92,7 +92,8 @@ class InsuranceBlockchainService
     public function payPremium(int $policyId, float $premiumAmount, string $userAddress): array
     {
         try {
-            $premiumWei = $this->web3->etherToWei($premiumAmount);
+            // Convertir XAF en Wei
+            $premiumWei = $this->web3->xafToWei($premiumAmount);
 
             $txHash = $this->web3->sendTransaction(
                 'payPremium',
@@ -138,7 +139,8 @@ class InsuranceBlockchainService
     public function declareClaim(Claim $claim, int $policyId, string $ipfsHash, string $userAddress): array
     {
         try {
-            $amountWei = $this->web3->etherToWei($claim->montant_reclame);
+            // Convertir XAF en Wei
+            $amountWei = $this->web3->xafToWei($claim->montant_reclame);
 
             $txHash = $this->web3->sendTransaction(
                 'declareClaim',
@@ -302,17 +304,38 @@ class InsuranceBlockchainService
      */
     private function extractPolicyIdFromReceipt(array $receipt): ?int
     {
+        Log::info('Extracting policyId from receipt', [
+            'has_logs' => !empty($receipt['logs']),
+            'logs_count' => count($receipt['logs'] ?? [])
+        ]);
+
         if (empty($receipt['logs'])) {
+            Log::warning('No logs found in transaction receipt');
             return null;
         }
 
-        foreach ($receipt['logs'] as $log) {
+        foreach ($receipt['logs'] as $index => $log) {
+            Log::info('Processing log', [
+                'log_index' => $index,
+                'topics_count' => count($log['topics'] ?? []),
+                'topics' => $log['topics'] ?? []
+            ]);
+
             // Le premier topic après l'event signature est le policyId (indexed)
             if (isset($log['topics'][1])) {
-                return hexdec($log['topics'][1]);
+                $policyIdHex = $log['topics'][1];
+                $policyId = hexdec($policyIdHex);
+
+                Log::info('PolicyId extracted successfully', [
+                    'hex' => $policyIdHex,
+                    'decimal' => $policyId
+                ]);
+
+                return $policyId;
             }
         }
 
+        Log::warning('No policyId found in logs');
         return null;
     }
 

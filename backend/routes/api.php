@@ -119,6 +119,9 @@ Route::controller(AuthController::class)->group(function () {
             Route::delete('cleanup', [ActivityLogController::class, 'cleanup']); // Nettoyage (admin)
             Route::get('{id}', [ActivityLogController::class, 'show']); // Détails d'un log
         });
+
+        // --- ROUTES STATISTIQUES (DASHBOARD ADMIN) ---
+        Route::get('stats/dashboard', [ApiContractController::class, 'dashboardStats']); // Statistiques générales
     });
 });
 

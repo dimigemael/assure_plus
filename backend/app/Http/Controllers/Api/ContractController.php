@@ -331,4 +331,146 @@ class ContractController extends Controller
 
         return response()->json($assures);
     }
+
+    /**
+     * Récupérer les statistiques du dashboard admin
+     */
+    public function dashboardStats()
+    {
+        \Log::info('=== dashboardStats appelée ===');
+
+        try {
+            \Log::info('Début du calcul des statistiques');
+
+            // Statistiques globales
+            \Log::info('Calcul des contrats...');
+            $totalContracts = Contract::count();
+            $activeContracts = Contract::where('status', 'actif')->count();
+            $pendingContracts = Contract::where('status', 'brouillon')->count();
+            $cancelledContracts = Contract::where('status', 'resilie')->count();
+            \Log::info('Contrats calculés', [
+                'total' => $totalContracts,
+                'actifs' => $activeContracts
+            ]);
+
+            // Statistiques utilisateurs
+            \Log::info('Calcul des utilisateurs...');
+            $totalUsers = User::where('role', 'assure')->count();
+            $newUsersThisMonth = User::where('role', 'assure')
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count();
+            \Log::info('Utilisateurs calculés', ['total' => $totalUsers]);
+
+            // Montants financiers
+            \Log::info('Calcul des montants financiers...');
+            $totalCoverage = Contract::where('status', 'actif')
+                ->sum('montant_couverture');
+            $totalPremiums = Contract::where('status', 'actif')
+                ->sum('prime');
+            $monthlyRevenue = \DB::table('premiums')
+                ->whereMonth('date_paiement', now()->month)
+                ->whereYear('date_paiement', now()->year)
+                ->where('statut', 'paye')
+                ->sum('montant');
+            \Log::info('Montants calculés');
+
+            // Statistiques sinistres
+            \Log::info('Calcul des sinistres...');
+            $totalClaims = \DB::table('claims')->count();
+            $pendingClaims = \DB::table('claims')->where('status', 'en_attente')->count();
+            $approvedClaims = \DB::table('claims')->where('status', 'approuvé')->count();
+            $rejectedClaims = \DB::table('claims')->where('status', 'rejeté')->count();
+            $totalClaimsAmount = \DB::table('claims')
+                ->where('status', 'approuvé')
+                ->sum('montant_reclame');
+            \Log::info('Sinistres calculés', ['total' => $totalClaims]);
+
+            // Contrats par type d'assurance
+            \Log::info('Calcul des contrats par type...');
+            $contractsByType = Contract::where('status', 'actif')
+                ->select('type_assurance', \DB::raw('count(*) as total'))
+                ->groupBy('type_assurance')
+                ->get();
+            \Log::info('Contrats par type calculés');
+
+            // Activité récente (derniers contrats)
+            \Log::info('Calcul de l\'activité récente...');
+            $recentContracts = Contract::with(['user'])
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get(['id', 'numero_police', 'user_id', 'type_assurance', 'status', 'date_debut', 'created_at'])
+                ->map(function ($contract) {
+                    return [
+                        'numero_police' => $contract->numero_police,
+                        'type_assurance' => $contract->type_assurance,
+                        'statut' => $contract->status,
+                        'date_debut' => $contract->date_debut,
+                        'user_name' => $contract->user ? ($contract->user->nom . ' ' . $contract->user->prenom) : 'N/A',
+                    ];
+                });
+            \Log::info('Activité récente calculée');
+
+            // Statistiques blockchain
+            \Log::info('Calcul des statistiques blockchain...');
+            $blockchainContracts = Contract::whereNotNull('blockchain_policy_id')->count();
+            $blockchainPercentage = $activeContracts > 0
+                ? round(($blockchainContracts / $activeContracts) * 100, 2)
+                : 0;
+            \Log::info('Statistiques blockchain calculées');
+
+            // Nombre total de produits d'assurance
+            \Log::info('Calcul des produits...');
+            $totalProducts = \DB::table('insurance_products')->where('status', 'actif')->count();
+            \Log::info('Produits calculés', ['total' => $totalProducts]);
+
+            \Log::info('Préparation de la réponse JSON...');
+            $response = [
+                'summary' => [
+                    'total_contracts' => $totalContracts,
+                    'active_contracts' => $activeContracts,
+                    'pending_contracts' => $pendingContracts,
+                    'cancelled_contracts' => $cancelledContracts,
+                    'total_users' => $totalUsers,
+                    'total_products' => $totalProducts,
+                    'new_users_this_month' => $newUsersThisMonth,
+                ],
+                'finances' => [
+                    'total_coverage' => (float) $totalCoverage,
+                    'total_premiums' => (float) $totalPremiums,
+                    'monthly_revenue' => (float) $monthlyRevenue,
+                ],
+                'claims' => [
+                    'total_claims' => $totalClaims,
+                    'pending_claims' => $pendingClaims,
+                    'approved_claims' => $approvedClaims,
+                    'rejected_claims' => $rejectedClaims,
+                    'total_amount' => (float) $totalClaimsAmount,
+                ],
+                'blockchain' => [
+                    'contracts_on_blockchain' => $blockchainContracts,
+                    'blockchain_percentage' => $blockchainPercentage,
+                ],
+                'contracts_by_type' => $contractsByType,
+                'recent_activity' => $recentContracts,
+            ];
+
+            \Log::info('Réponse prête, envoi au client');
+            return response()->json($response);
+
+        } catch (\Exception $e) {
+            \Log::error('=== ERREUR dashboardStats ===');
+            \Log::error('Message: ' . $e->getMessage());
+            \Log::error('File: ' . $e->getFile());
+            \Log::error('Line: ' . $e->getLine());
+            \Log::error('Trace: ' . $e->getTraceAsString());
+
+            return response()->json([
+                'message' => 'Erreur lors de la récupération des statistiques',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ], 500);
+        }
+    }
 }

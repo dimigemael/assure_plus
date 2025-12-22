@@ -33,6 +33,7 @@ class Contract extends Model
         'beneficiaire_relation',
         'smart_contract_address',
         'transaction_hash',
+        'blockchain_policy_id',
         'conditions_generales_hash',
         'documents_supplementaires'
     ];

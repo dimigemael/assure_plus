@@ -208,3 +208,16 @@ html {
     font-size: 1.4rem;
     border: 1px solid #ccc;
 }
+
+/* Bouton de visualisation de preuve - styles spécifiques */
+.proof-view-button {
+    background-color: #2196F3 !important;
+    color: white !important;
+    flex: none !important;
+    width: auto !important;
+}
+
+.proof-view-button:hover {
+    background-color: #1976D2 !important;
+    opacity: 0.9;
+}

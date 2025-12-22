@@ -127,6 +127,17 @@ class Web3Service
     }
 
     /**
+     * Convertit XAF en Wei (via ETH)
+     * 1 ETH = 2,500,000 XAF (taux de conversion fixe)
+     */
+    public function xafToWei(float $xaf): string
+    {
+        $ethToXafRate = 2500000; // 1 ETH = 2,500,000 XAF
+        $ethAmount = $xaf / $ethToXafRate;
+        return $this->etherToWei($ethAmount);
+    }
+
+    /**
      * Encode les paramètres d'une fonction pour l'appel au contrat
      */
     private function encodeFunction(string $functionName, array $params): string
@@ -175,7 +186,9 @@ class Web3Service
             $value = $params[$i] ?? null;
 
             if ($type['type'] === 'uint256') {
-                $encoded .= str_pad(dechex($value), 64, '0', STR_PAD_LEFT);
+                // Convertir en int si c'est une string
+                $intValue = is_string($value) ? intval($value) : $value;
+                $encoded .= str_pad(dechex($intValue), 64, '0', STR_PAD_LEFT);
             } elseif ($type['type'] === 'address') {
                 $encoded .= str_pad(str_replace('0x', '', $value), 64, '0', STR_PAD_LEFT);
             } elseif ($type['type'] === 'string') {
@@ -203,7 +216,8 @@ class Web3Service
         ];
 
         if (isset($options['value'])) {
-            $transaction['value'] = '0x' . dechex($options['value']);
+            $intValue = is_string($options['value']) ? intval($options['value']) : $options['value'];
+            $transaction['value'] = '0x' . dechex($intValue);
         }
 
         return $this->rpcCall('eth_sendTransaction', [$transaction]);

@@ -86,8 +86,13 @@ const PremiumPayment = () => {
       try {
         await connect();
       } catch (error) {
-        throw new Error('Veuillez connecter MetaMask pour payer via blockchain');
+        throw 'Veuillez connecter MetaMask pour payer via blockchain';
       }
+    }
+
+    // Vérifier que le contrat a un blockchain_policy_id
+    if (!selectedContract.blockchain_policy_id) {
+      throw 'Ce contrat n\'a pas encore été enregistré sur la blockchain. Veuillez contacter un administrateur.';
     }
 
     // Convertir XAF en ETH
@@ -97,26 +102,42 @@ const PremiumPayment = () => {
     // Vérifier le solde
     const balanceCheck = currencyService.checkSufficientBalance(parseFloat(balance), xafAmount);
     if (!balanceCheck.sufficient) {
-      throw new Error(
-        `Solde insuffisant. Requis: ${ethWithMargin.toFixed(6)} ETH (${currencyService.formatXAF(xafAmount)}), ` +
-        `Disponible: ${balance} ETH`
-      );
+      throw `Solde insuffisant. Requis: ${ethWithMargin.toFixed(6)} ETH (${currencyService.formatXAF(xafAmount)}), Disponible: ${balance} ETH`;
     }
 
     showInfoToast(`Paiement de ${currencyService.formatXAF(xafAmount)} (${ethAmount.toFixed(6)} ETH + ${gasEstimate.toFixed(6)} ETH de gas)...`);
 
+    // Vérifier l'adresse du contrat
+    const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
+    if (!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000') {
+      throw 'Adresse du smart contract non configurée. Vérifiez VITE_CONTRACT_ADDRESS dans .env';
+    }
+
     // Initialiser le smart contract
     if (!smartContractService.contractAddress) {
-      // Utiliser l'adresse du contrat depuis l'environnement ou un contrat de test
-      const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
       smartContractService.setContractAddress(contractAddress);
     }
 
-    await smartContractService.initialize(signer);
+    console.log('=== BLOCKCHAIN PAYMENT DEBUG ===');
+    console.log('Contract Address:', contractAddress);
+    console.log('Signer:', signer);
+    console.log('Signer address:', account);
+    console.log('Blockchain Policy ID:', selectedContract.blockchain_policy_id);
+    console.log('ETH Amount:', ethAmount);
+
+    // Initialiser avec le signer
+    try {
+      await smartContractService.initialize(signer);
+      console.log('Smart contract initialisé avec succès');
+    } catch (error) {
+      console.error('Erreur initialisation smart contract:', error);
+      throw `Erreur d'initialisation du smart contract: ${error.message}`;
+    }
 
     // Effectuer le paiement via smart contract
-    // Note: Le policyId devrait être stocké dans le contrat côté backend
-    const policyId = selectedContract.blockchain_policy_id || selectedContract.id;
+    const policyId = selectedContract.blockchain_policy_id;
+
+    console.log('Calling payPremium with:', { policyId, ethAmount });
 
     const txResult = await smartContractService.payPremium(policyId, ethAmount);
 
