@@ -5,8 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastContainer';
 import productService from '../services/productService';
 import subscriptionService from '../services/subscriptionService';
-import currencyService from '../services/currencyService';
-import statsService from '../services/statsService';
 import CreateProductForm from '../components/CreateProductForm';
 
 export default function AdminDashboard() {
