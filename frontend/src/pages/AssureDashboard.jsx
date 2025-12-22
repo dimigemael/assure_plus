@@ -210,7 +210,7 @@ export default function AssureDashboard() {
 
         {/* --- PAGE CONTENT --- */}
         {activePage === "suscribe" && (
-          <div className="card_container">
+          <div className="card_contain">
             {showSubscriptionForm && selectedProduct ? (
               <SubscriptionForm
                 product={selectedProduct}
@@ -266,6 +266,7 @@ export default function AssureDashboard() {
                         marginTop: '15px',
                         padding: '12px',
                         borderRadius: '6px',
+                        height: 100,
                         textAlign: 'center',
                         backgroundColor:
                           existingSubscription.status === 'actif' ? '#e8f5e9' :
@@ -427,8 +428,8 @@ export default function AssureDashboard() {
 
         {/* --- PAIEMENT DE PRIMES --- */}
         {activePage === "pay_premium" && (
-          <div className="card_container">
-            <div className="card">
+          <div className="card_contain">
+            <div className="cadre">
               <PremiumPayment />
             </div>
           </div>
@@ -439,7 +440,7 @@ export default function AssureDashboard() {
             <h3 style={{ marginBottom: '20px' }}>Historique des contrats et transactions</h3>
 
             {/* Section Contrats */}
-            <div className="card" style={{ marginBottom: '30px' }}>
+            <div className="cadre" style={{ marginBottom: '30px' }}>
               <h4 style={{ fontSize: '1.8rem', marginBottom: '15px' }}>Mes Contrats</h4>
               <hr className="title-line" />
 
@@ -486,13 +487,13 @@ export default function AssureDashboard() {
                               borderRadius: '12px',
                               fontSize: '1.2rem',
                               backgroundColor:
-                                contract.status === 'actif' ? '#e8f5e9' :
-                                contract.status === 'brouillon' ? '#fff3e0' :
-                                contract.status === 'resilie' ? '#ffebee' : '#f5f5f5',
-                              color:
                                 contract.status === 'actif' ? '#2e7d32' :
                                 contract.status === 'brouillon' ? '#f57c00' :
-                                contract.status === 'resilie' ? '#c62828' : '#666'
+                                contract.status === 'resilie' ? '#c62828' : '#f5f5f5',
+                              color:
+                                contract.status === 'actif' ? '#e8f5e9' :
+                                contract.status === 'brouillon' ? '#fff3e0' :
+                                contract.status === 'resilie' ? '#ffebee' : '#666'
                             }}>
                               {contract.status === 'actif' && 'Actif'}
                               {contract.status === 'brouillon' && 'En attente'}
@@ -509,7 +510,7 @@ export default function AssureDashboard() {
             </div>
 
             {/* Section Transactions (Paiements de Primes) */}
-            <div className="card">
+            <div className="cadre">
               <h4 style={{ fontSize: '1.8rem', marginBottom: '15px' }}>Historique des Paiements</h4>
               <hr className="title-line" />
 

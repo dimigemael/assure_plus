@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastContainer';
 import productService from '../services/productService';
+import currencyService from '../services/currencyService';
+import statsService from '../services/statsService';
 import subscriptionService from '../services/subscriptionService';
 import CreateProductForm from '../components/CreateProductForm';
 
@@ -172,10 +174,12 @@ export default function AdminDashboard() {
         )}
 
         {activePage === "products" && (
-          <div className="card_container">
-            <div className="card">
-              <h3>Mes produits d'assurance</h3>
-              <hr className="title-line" />
+          <div className="card_contain">
+            <div className="cadre">
+                <div className="titre">
+
+                  <h3>Mes produits d'assurance</h3>
+                </div>
 
             {loading ? (
               <p style={{ textAlign: 'center', padding: '20px' }}>Chargement...</p>
@@ -214,7 +218,7 @@ export default function AdminDashboard() {
                         <span style={{
                           padding: '4px 12px',
                           borderRadius: '12px',
-                          fontSize: '12px',
+                          fontSize: '15px',
                           fontWeight: 'bold',
                           backgroundColor: product.status === 'actif' ? '#e8f5e9' : '#ffebee',
                           color: product.status === 'actif' ? '#2e7d32' : '#c62828'
@@ -235,9 +239,8 @@ export default function AdminDashboard() {
         )}
 
         {activePage === "subscriptions" && (
-          <div className="card">
+          <div className="cadre">
             <h3>Valider les souscriptions</h3>
-            <hr className="title-line" />
 
             {loading ? (
               <p style={{ textAlign: 'center', padding: '20px' }}>Chargement...</p>
