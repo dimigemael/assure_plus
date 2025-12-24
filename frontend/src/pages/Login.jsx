@@ -89,12 +89,14 @@ function Login() {
           />
 
           {password !== "" && (
-            <img
-              src={showPassword ? eye: eyeSlash }
-              alt="Afficher le mot de passe"
-              className="eye-icon"
+          <button
+              type="button"
+              className="password-toggle"
               onClick={() => setShowPassword(!showPassword)}
-            />
+              aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            >
+              {showPassword ? '👁️' : '👁️‍🗨️'}
+            </button>
           )}
 
         </div>

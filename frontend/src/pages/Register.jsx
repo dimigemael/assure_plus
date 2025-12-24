@@ -152,12 +152,14 @@ const Register = () => {
             />
 
             {formData.motDePasse !== "" && (
-              <img
-                src={showPassword ? eye : eyeSlash}
-                className="eye-icon"
-                onClick={() => setShowPassword(!showPassword)}
-                alt="Afficher"
-              />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            >
+              {showPassword ? '👁️' : '👁️‍🗨️'}
+            </button>
             )}
           </div>
 

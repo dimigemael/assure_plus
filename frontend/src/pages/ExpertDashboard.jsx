@@ -100,7 +100,9 @@ export default function ExpertDashboard() {
       <div className="main">
         <div className="header">
           <h2>Dashboard Expert</h2>
-          <Link to="/login" className="link-home">Accueil</Link>
+          <span style={{ fontSize: '14px', color: '#666' }}>
+            Rôle: {user?.role}
+          </span>
         </div>
 
         {/* --- SINISTRES --- */}

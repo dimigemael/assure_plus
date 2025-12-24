@@ -205,111 +205,142 @@ export default function AssureDashboard() {
       <div className="main">
         <div className="header">
           <h2>Dashboard Assuré</h2>
-          <Link to="/login" className="link-home">Accueil</Link>
+          <span style={{ fontSize: '14px', color: '#666' }}>
+            Rôle: {user?.role}
+          </span>
         </div>
 
         {/* --- PAGE CONTENT --- */}
         {activePage === "suscribe" && (
-          <div className="card_contain">
+          <div>
             {showSubscriptionForm && selectedProduct ? (
               <SubscriptionForm
                 product={selectedProduct}
                 onSubmit={handleSubscriptionSubmit}
                 onCancel={handleSubscriptionCancel}
               />
-            ) : loading ? (
-              <div className="card">
-                <p style={{ textAlign: 'center', padding: '20px' }}>Chargement des produits...</p>
-              </div>
-            ) : products.length === 0 ? (
-              <div className="card">
-                <h3>Aucun produit disponible</h3>
-                <hr className="title-line" />
-                <p style={{ textAlign: 'center', color: '#666' }}>
-                  Aucun produit d'assurance n'est actuellement disponible.
-                </p>
-              </div>
             ) : (
-              products.map((product, index) => {
-                // Vérifier si l'utilisateur a déjà souscrit à ce produit
-                const existingSubscription = allMySubscriptions.find(
-                  sub => sub.insurance_product_id === product.id
-                );
+              <>
+                <h3 className="products-page-title">📋 Produits d'assurance disponibles</h3>
 
-                return (
-                  <div key={index} className="card">
-                    <h3>{product.nom_produit}</h3>
-                    <hr className="title-line" />
-
-                    <p><strong>Type :</strong> {product.type_assurance}</p>
-                    <p><strong>Description :</strong> {product.description || 'Non spécifiée'}</p>
-                    <p><strong>Montant couverture :</strong> {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}</p>
-                    <p><strong>Prime {product.frequence_paiement} :</strong> {currencyService.formatXAF(parseFloat(product.prime_base))}</p>
-                    <p><strong>Franchise :</strong> {currencyService.formatXAF(parseFloat(product.franchise_base))}</p>
-
-                    {product.garanties_incluses && product.garanties_incluses.length > 0 && (
-                      <div style={{ marginTop: '15px', fontSize: '1.3rem' }}>
-                        <strong>Garanties incluses :</strong>
-                        <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-                          {product.garanties_incluses.map((garantie, idx) => (
-                            <li key={idx}>
-                              {garantie.nom} {garantie.obligatoire && <strong>(Obligatoire)</strong>}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {existingSubscription ? (
-                      // Afficher le statut si déjà souscrit
-                      <div style={{
-                        marginTop: '15px',
-                        padding: '12px',
-                        borderRadius: '6px',
-                        height: 100,
-                        textAlign: 'center',
-                        backgroundColor:
-                          existingSubscription.status === 'actif' ? '#e8f5e9' :
-                          existingSubscription.status === 'brouillon' ? '#fff3e0' :
-                          existingSubscription.status === 'resilie' ? '#ffebee' : '#f5f5f5',
-                        color:
-                          existingSubscription.status === 'actif' ? '#2e7d32' :
-                          existingSubscription.status === 'brouillon' ? '#f57c00' :
-                          existingSubscription.status === 'resilie' ? '#c62828' : '#666'
-                      }}>
-                        <strong style={{ fontSize: '1.4rem' }}>
-                          {existingSubscription.status === 'actif' && '✓ Souscription active'}
-                          {existingSubscription.status === 'brouillon' && '⏳ En attente de validation'}
-                          {existingSubscription.status === 'resilie' && '✗ Souscription résiliée'}
-                          {!['actif', 'brouillon', 'resilie'].includes(existingSubscription.status) &&
-                            `Statut: ${existingSubscription.status}`
-                          }
-                        </strong>
-                        {existingSubscription.status === 'brouillon' && (
-                          <p style={{ margin: '5px 0 0 0', fontSize: '1.2rem' }}>
-                            Votre demande est en cours de traitement par un administrateur
-                          </p>
-                        )}
-                        {existingSubscription.status === 'actif' && (
-                          <p style={{ margin: '5px 0 0 0', fontSize: '1.2rem' }}>
-                            N° Police: {existingSubscription.numero_police}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      // Afficher le bouton souscrire si pas encore souscrit
-                      <button
-                        onClick={() => {
-                          setSelectedProduct(product);
-                          setShowSubscriptionForm(true);
-                        }}
-                      >
-                        Souscrire
-                      </button>
-                    )}
+                {loading ? (
+                  <div className="products-loading">Chargement des produits...</div>
+                ) : products.length === 0 ? (
+                  <div className="products-empty-state">
+                    <div className="products-empty-icon">📦</div>
+                    <div className="products-empty-text">Aucun produit d'assurance disponible</div>
                   </div>
-                );
-              })
+                ) : (
+                  <div className="products-grid">
+                    {products.map((product, index) => {
+                      // Vérifier si l'utilisateur a déjà souscrit à ce produit
+                      const existingSubscription = allMySubscriptions.find(
+                        sub => sub.insurance_product_id === product.id
+                      );
+
+                      return (
+                        <div key={index} className="product-card">
+                          <div className="product-card-header">
+                            <h3 className="product-card-title">{product.nom_produit}</h3>
+                            <div className="product-card-type">{product.type_assurance}</div>
+                          </div>
+
+                          <div className="product-card-body">
+                            {product.description && (
+                              <div className="product-info-item">
+                                <div className="product-info-label">Description</div>
+                                <div className="product-info-value description">
+                                  {product.description}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="product-info-item">
+                              <div className="product-info-label">Couverture</div>
+                              <div className="product-info-value highlight">
+                                {currencyService.formatXAF(parseFloat(product.montant_couverture_base))}
+                              </div>
+                            </div>
+
+                            <div className="product-info-item">
+                              <div className="product-info-label">
+                                Prime {product.frequence_paiement}
+                              </div>
+                              <div className="product-info-value price">
+                                {currencyService.formatXAF(parseFloat(product.prime_base))}
+                              </div>
+                            </div>
+
+                            <div className="product-info-item">
+                              <div className="product-info-label">Franchise</div>
+                              <div className="product-info-value">
+                                {currencyService.formatXAF(parseFloat(product.franchise_base))}
+                              </div>
+                            </div>
+
+                            {product.garanties_incluses && product.garanties_incluses.length > 0 && (
+                              <div className="product-guarantees">
+                                <div className="product-guarantees-title">Garanties incluses</div>
+                                <ul className="product-guarantees-list">
+                                  {product.garanties_incluses.map((garantie, idx) => (
+                                    <li key={idx}>
+                                      {garantie.nom}
+                                      {garantie.obligatoire && <strong>(Obligatoire)</strong>}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="product-card-footer">
+                            {existingSubscription ? (
+                              // Afficher le statut si déjà souscrit
+                              <div
+                                className={`product-status-badge ${
+                                  existingSubscription.status === 'actif' ? 'active' :
+                                  existingSubscription.status === 'brouillon' ? 'pending' :
+                                  existingSubscription.status === 'resilie' ? 'cancelled' : ''
+                                }`}
+                              >
+                                <div className="product-status-badge-title">
+                                  {existingSubscription.status === 'actif' && '✓ Souscription active'}
+                                  {existingSubscription.status === 'brouillon' && '⏳ En attente de validation'}
+                                  {existingSubscription.status === 'resilie' && '✗ Souscription résiliée'}
+                                  {!['actif', 'brouillon', 'resilie'].includes(existingSubscription.status) &&
+                                    `Statut: ${existingSubscription.status}`
+                                  }
+                                </div>
+                                {existingSubscription.status === 'brouillon' && (
+                                  <div className="product-status-badge-info">
+                                    Votre demande est en cours de traitement
+                                  </div>
+                                )}
+                                {existingSubscription.status === 'actif' && (
+                                  <div className="product-status-badge-info">
+                                    N° Police: {existingSubscription.numero_police}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              // Afficher le bouton souscrire si pas encore souscrit
+                              <button
+                                className="product-subscribe-btn"
+                                onClick={() => {
+                                  setSelectedProduct(product);
+                                  setShowSubscriptionForm(true);
+                                }}
+                              >
+                                Souscrire maintenant
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

@@ -121,9 +121,10 @@ class Web3Service
     /**
      * Convertit Ether en Wei
      */
-    public function etherToWei(float $ether): string
+    public function toWei($ether) 
     {
-        return bcmul((string) $ether, '1000000000000000000', 0);
+        $cleanEther = number_format($ether, 18, '.', '');
+        return bcmul($cleanEther, '1000000000000000000', 0);
     }
 
     /**
@@ -134,7 +135,7 @@ class Web3Service
     {
         $ethToXafRate = 2500000; // 1 ETH = 2,500,000 XAF
         $ethAmount = $xaf / $ethToXafRate;
-        return $this->etherToWei($ethAmount);
+        return $this->toWei($ethAmount);
     }
 
     /**
